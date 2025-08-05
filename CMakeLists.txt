@@ -25,6 +25,8 @@ add_executable(EngineGL
         src/main.cpp
         src/Shader.cpp
         src/Shader.h
+        src/Mesh.cpp
+        src/Mesh.h
 )
 
 target_include_directories(EngineGL PRIVATE "src/vendor")

@@ -11,7 +11,7 @@
 
 namespace EngineGL {
     class Shader {
-        GLuint vao_id{0}, vbo_id{0}, program_id{0}, ebo_id{0};
+        GLuint program_id{0};
         std::string vertex_shader_source, frag_shader_source;
 
         void link_program(GLuint vertex_shader_id, GLuint frag_shader_id);
@@ -20,16 +20,13 @@ namespace EngineGL {
 
     public:
         [[nodiscard]] GLuint get_program_id() const { return program_id; }
-
-        [[nodiscard]] GLuint get_vao_id() const {return vao_id;}
-
         static std::string load_source( std::string file_path);
-        static void define_buffer_data(GLenum target, GLsizeiptr size, const void *data, GLenum usage);
-        static void define_buffer_data(GLenum target, GLsizeiptr size, const void *data);
-        void create_buffer(GLenum type);
         void compile_shaders();
         Shader( std::string vertex_shader_path,  std::string fragment_shader_path);
         ~Shader();
+
+        void bind() const;
+        static void unbind();
     };
 } // EngineGL
 

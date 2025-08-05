@@ -23,26 +23,14 @@ namespace EngineGL {
 
     }
 
-
-    void Shader::create_buffer(const GLenum type) {
-        if (vao_id == 0) {
-            glGenVertexArrays(1, &vao_id);
-        }
-
-        glBindVertexArray(vao_id);
-
-        if (type == GL_ARRAY_BUFFER) {
-            glGenBuffers(1, &vbo_id);
-            glBindBuffer(type, vbo_id);
-
-        }else if constexpr (GL_ELEMENT_ARRAY_BUFFER) {
-            glGenBuffers(1, &ebo_id);
-            glBindBuffer(type, ebo_id);
-        }
-
-
-
+    void Shader::bind() const {
+        glUseProgram(program_id);
     }
+
+    void Shader::unbind() {
+        glUseProgram(0);
+    }
+
 
     void Shader::compile_shaders() {
         const GLuint vertex_shader_id = glCreateShader(GL_VERTEX_SHADER);
@@ -61,6 +49,9 @@ namespace EngineGL {
 
         link_program(vertex_shader_id, frag_shader_id);
         check_program_link(program_id);
+
+        glDeleteShader(vertex_shader_id);
+        glDeleteShader(frag_shader_id);
     }
 
     void Shader::link_program(GLuint vertex_shader_id, GLuint frag_shader_id) {
@@ -71,7 +62,7 @@ namespace EngineGL {
         glAttachShader(program_id, vertex_shader_id);
         glAttachShader(program_id, frag_shader_id);
         glLinkProgram(program_id);
-        check_program_link(program_id);
+
     }
 
     void Shader::check_shader_compile(GLuint shader) {
@@ -94,15 +85,6 @@ namespace EngineGL {
         }
     }
 
-    void Shader::define_buffer_data(GLenum target, GLsizeiptr size, const void *data, GLenum usage) {
-        glBufferData(target, size, data, usage);
-    }
-
-    void Shader::define_buffer_data(GLenum target, GLsizeiptr size, const void *data) {
-        glBufferData(target, size, data, GL_STATIC_DRAW);
-    }
-
-
     std::string Shader::load_source( std::string file_path) {
         std::ifstream file;
         file.open(file_path, std::ios::in);
@@ -115,6 +97,10 @@ namespace EngineGL {
         std::string source;
         while (std::getline(file, line)) {
             source += line + "\n";
+        }
+
+        if (source.empty()) {
+            throw std::runtime_error("Shader source is empty: " + file_path);
         }
 
         return source;

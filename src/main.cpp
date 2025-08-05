@@ -2,6 +2,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+#include "Mesh.h"
 #include "Shader.h"
 #include "cmake-build-debug/_deps/glfw-src/deps/linmath.h"
 
@@ -24,28 +25,10 @@ static void key_callback(GLFWwindow *window, int key, int scancode, int action, 
         glfwSetWindowShouldClose(window, GLFW_TRUE);
 }
 
-static void check_shader_compile(GLuint shader) {
-    GLint success;
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-    if (!success) {
-        char infoLog[512];
-        glGetShaderInfoLog(shader, 512, NULL, infoLog);
-        fprintf(stderr, "Shader compile error:\n%s\n", infoLog);
-    }
-}
-
-static void check_program_link(GLuint program) {
-    GLint success;
-    glGetProgramiv(program, GL_LINK_STATUS, &success);
-    if (!success) {
-        char infoLog[512];
-        glGetProgramInfoLog(program, 512, NULL, infoLog);
-        fprintf(stderr, "Program link error:\n%s\n", infoLog);
-    }
-}
 
 int main() {
     EngineGL::Shader shader(RESOURCE_PATH"/triangle.vert", RESOURCE_PATH"/triangle.frag");
+    EngineGL::Mesh mesh;
 
     GLFWwindow *window;
     GLuint vao, vertex_buffer, vertex_shader, fragment_shader, program;
@@ -78,8 +61,8 @@ int main() {
     glfwSwapInterval(1);
 
 
-    shader.create_buffer(GL_ARRAY_BUFFER);
-    EngineGL::Shader::define_buffer_data(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
+    mesh.create_buffer(GL_ARRAY_BUFFER);
+    EngineGL::Mesh::define_buffer_data(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
 
 
     shader.compile_shaders();
@@ -87,20 +70,21 @@ int main() {
 
     mvp_location = glGetUniformLocation(shader.get_program_id(), "MVP");
 
-    glEnableVertexAttribArray(0); // vPos
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(vertices[0]), static_cast<void *>(0));
-
-    glEnableVertexAttribArray(1); // vCol
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(vertices[0]), reinterpret_cast<void *>(sizeof(float) * 2));
-
+    EngineGL::Mesh::set_vertex_attrib_pointer(
+        0, 2, GL_FLOAT, GL_FALSE,
+        sizeof(vertices[0]), static_cast<void *>(nullptr)
+    );
+    EngineGL::Mesh::set_vertex_attrib_pointer(
+    1, 3, GL_FLOAT, GL_FALSE,
+    sizeof(vertices[0]), reinterpret_cast<void *>(sizeof(float) * 2)
+    );
 
     while (!glfwWindowShouldClose(window)) {
-        float ratio;
         int width, height;
         mat4x4 m, p, mvp;
 
         glfwGetFramebufferSize(window, &width, &height);
-        ratio = width / (float) height;
+        const float ratio = width / (float) height;
 
         glViewport(0, 0, width, height);
         glClear(GL_COLOR_BUFFER_BIT);
@@ -110,11 +94,14 @@ int main() {
         mat4x4_ortho(p, -ratio, ratio, -1.f, 1.f, 1.f, -1.f);
         mat4x4_mul(mvp, p, m);
 
-        glUseProgram(shader.get_program_id());
+        shader.bind();
         glUniformMatrix4fv(mvp_location, 1, GL_FALSE, (const GLfloat *) mvp);
 
-        glBindVertexArray(shader.get_vao_id());
+        mesh.bind();
+
         glDrawArrays(GL_TRIANGLES, 0, 3);
+        EngineGL::Mesh::unbind();
+        EngineGL::Shader::unbind();
 
         glfwSwapBuffers(window);
         glfwPollEvents();
