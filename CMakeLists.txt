@@ -1,19 +1,18 @@
 cmake_minimum_required(VERSION 3.31)
+include(FetchContent)
 
 project(EngineGL VERSION 0.0.1)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-
-set(glad_SOURCE_DIR "src/vendor/glad")
-set(glm_SOURCE_DIR "src/vendor/glm")
+set(GLM_BUILD_LIBRARY OFF)
 
 
 find_package(OpenGL REQUIRED)
+add_subdirectory(src/vendor/glm)
+set(RESOURCE_DIR "${CMAKE_SOURCE_DIR}/resources")
+add_definitions(-DRESOURCE_PATH="${RESOURCE_DIR}")
 
-
-include(FetchContent)
 FetchContent_Declare(
         glfw
         GIT_REPOSITORY https://github.com/glfw/glfw.git
@@ -22,18 +21,14 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(glfw)
 
 
-set(GLM_BUILD_LIBRARY OFF)
-add_subdirectory(${glm_SOURCE_DIR})
-
-
 add_executable(EngineGL
         src/main.cpp
+        src/Shader.cpp
+        src/Shader.h
 )
 
-
-target_include_directories(EngineGL PRIVATE ${glad_SOURCE_DIR})
-target_sources(EngineGL PRIVATE ${glad_SOURCE_DIR}/glad.c)
-
+target_include_directories(EngineGL PRIVATE "src/vendor")
+target_sources(EngineGL PRIVATE src/vendor//glad/glad.c)
 
 target_link_libraries(EngineGL
         PRIVATE
