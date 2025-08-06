@@ -3,18 +3,27 @@
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#include "cmake-build-debug/_deps/glfw-src/deps/linmath.h"
+#include <glm/vec2.hpp>
+#include <glm/vec3.hpp>
+
+#include "glm/mat4x4.hpp"
+#include "glm/matrix.hpp"
+#include "glm/ext/matrix_clip_space.hpp"
+#include "glm/ext/matrix_transform.hpp"
+#include "glm/gtc/type_ptr.inl"
+
+
 
 typedef struct Vertex {
-    vec2 pos;
-    vec3 col;
+    glm::vec2 pos;
+    glm::vec3 col;
 } Vertex;
 
 static constexpr Vertex vertices[4] = {
-    {{-0.6f, 0.4f}, {0.f, 0.5f, 0.f}},
-    {{0.6f, 0.4f}, {1.f, 0.f, 1.f}},
-    {{.6f, -0.4f}, {0.f, 1.f, 1.f}},
-    {{-.6f, -0.4f}, {1.f, 1.f, 0.f}}
+    {{-1.f, 1.f}, {1.f, 0.f, 0.f}},
+    {{1.f, 1.f}, {0.f, 0.f, 1.f}},
+    {{1.f, -1.f}, {0.f, 1.f, 0.f}},
+    {{-1.f, -1.f}, {1.f, 1.f, 1.f}}
 };
 
 static constexpr GLuint indices[6] = {
@@ -45,7 +54,7 @@ static void key_callback(GLFWwindow *window, int key, int scancode, int action, 
 }
 
 GLuint compile_shader(const GLenum type, const std::string &source) {
-    GLuint shader = glCreateShader(type);
+    const GLuint shader = glCreateShader(type);
     const char *src = source.c_str();
     glShaderSource(shader, 1, &src, nullptr);
     glCompileShader(shader);
@@ -106,14 +115,14 @@ int main() {
 
 
 
-    std::string vertex_src = load_source(RESOURCE_PATH "/triangle.vert");
-    std::string fragment_src = load_source(RESOURCE_PATH "/triangle.frag");
+    const std::string vertex_src = load_source(RESOURCE_PATH "/triangle.vert");
+    const std::string fragment_src = load_source(RESOURCE_PATH "/triangle.frag");
 
-    GLuint vertex_shader = compile_shader(GL_VERTEX_SHADER, vertex_src);
-    GLuint fragment_shader = compile_shader(GL_FRAGMENT_SHADER, fragment_src);
+    const GLuint VAO = compile_shader(GL_VERTEX_SHADER, vertex_src);
+    const GLuint fragment_shader = compile_shader(GL_FRAGMENT_SHADER, fragment_src);
 
-    GLuint program = glCreateProgram();
-    glAttachShader(program, vertex_shader);
+    const GLuint program = glCreateProgram();
+    glAttachShader(program, VAO);
     glAttachShader(program, fragment_shader);
     glLinkProgram(program);
 
@@ -121,33 +130,43 @@ int main() {
 
     const GLint mvp_location = glGetUniformLocation(program, "MVP");
     const GLint vpos_location = glGetAttribLocation(program, "vPos");
-    GLint vcol_location = glGetAttribLocation(program, "vCol");
+    const GLint vcol_location = glGetAttribLocation(program, "vCol");
 
     glEnableVertexAttribArray(vpos_location);
-    glVertexAttribPointer(vpos_location, 2, GL_FLOAT, GL_FALSE,
-                          sizeof(Vertex), static_cast<void *>(nullptr));
+    glVertexAttribPointer(
+        vpos_location, 2, GL_FLOAT, GL_FALSE,sizeof(Vertex), static_cast<void *>(nullptr)
+    );
+
     glEnableVertexAttribArray(vcol_location);
-    glVertexAttribPointer(vcol_location, 3, GL_FLOAT, GL_FALSE,
-                          sizeof(Vertex), reinterpret_cast<void *>(offsetof(Vertex, col)));
+    glVertexAttribPointer(
+        vcol_location, 3, GL_FLOAT, GL_FALSE,sizeof(Vertex), reinterpret_cast<void *>(offsetof(Vertex, col))
+    );
 
 
 
     while (!glfwWindowShouldClose(window)) {
         int width, height;
-        mat4x4 m, p, mvp;
-
         glfwGetFramebufferSize(window, &width, &height);
-        float ratio = (static_cast<float>(width) / static_cast<float>(height));
-
         glViewport(0, 0, width, height);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        mat4x4_identity(m);
-        mat4x4_rotate_Z(m, m, static_cast<float>(glfwGetTime()));
-        mat4x4_ortho(p, -ratio, ratio, -1.f, 1.f, 1.f, -1.f);
-        mat4x4_mul(mvp, p, m);
+        glm::mat4 model(1);
+        model = glm::scale(model, glm::vec3(0.3f));
+        const auto new_position_y = sin(glfwGetTime());
+        model = glm::translate(model, glm::vec3(0.f, new_position_y * .3f, 0.f));
+        const float aspect = static_cast<float>(width) / static_cast<float>(height);
 
-        glUniformMatrix4fv(mvp_location, 1, GL_FALSE, reinterpret_cast<const GLfloat *>(mvp));
+        glm::mat4x4  projection;
+        if (aspect >= 1.0f) {
+            projection = glm::ortho(-aspect, aspect, -1.0f, 1.0f);
+        } else {
+            projection = glm::ortho(-1.0f, 1.0f, -1.0f / aspect, 1.0f / aspect);
+        }
+
+        glm::mat4x4 view(1.0f);
+        glm::mat4 mvp = projection * view * model;
+
+        glUniformMatrix4fv(mvp_location, 1, GL_FALSE, glm::value_ptr(mvp));
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
@@ -157,7 +176,7 @@ int main() {
     }
 
     glDeleteProgram(program);
-    glDeleteShader(vertex_shader);
+    glDeleteShader(VAO);
     glDeleteShader(fragment_shader);
     glDeleteBuffers(1, &vbo);
     glDeleteVertexArrays(1, &vao);
