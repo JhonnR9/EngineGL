@@ -10,13 +10,19 @@ typedef struct Vertex {
     vec3 col;
 } Vertex;
 
-static constexpr Vertex vertices[3] = {
-    { { -0.6f, -0.4f }, { 1.f, 0.f, 0.f } },
-    { {  0.6f, -0.4f }, { 0.f, 1.f, 0.f } },
-    { {   0.f,  0.6f }, { 0.f, 0.f, 1.f } }
+static constexpr Vertex vertices[4] = {
+    {{-0.6f, 0.4f}, {0.f, 0.5f, 0.f}},
+    {{0.6f, 0.4f}, {1.f, 0.f, 1.f}},
+    {{.6f, -0.4f}, {0.f, 1.f, 1.f}},
+    {{-.6f, -0.4f}, {1.f, 1.f, 0.f}}
 };
 
-std::string load_source(const std::string& file_path) {
+static constexpr GLuint indices[6] = {
+    0,1,2,
+    2,3,0
+};
+
+std::string load_source(const std::string &file_path) {
     std::ifstream file(file_path);
     if (!file.is_open()) {
         std::cerr << "Failed to open " << file_path << std::endl;
@@ -29,18 +35,18 @@ std::string load_source(const std::string& file_path) {
     return source;
 }
 
-static void error_callback(int error, const char* description) {
+static void error_callback(int error, const char *description) {
     std::cerr << "GLFW Error: " << description << std::endl;
 }
 
-static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+static void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods) {
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GLFW_TRUE);
 }
 
-GLuint compile_shader(const GLenum type, const std::string& source) {
+GLuint compile_shader(const GLenum type, const std::string &source) {
     GLuint shader = glCreateShader(type);
-    const char* src = source.c_str();
+    const char *src = source.c_str();
     glShaderSource(shader, 1, &src, nullptr);
     glCompileShader(shader);
 
@@ -65,7 +71,7 @@ int main() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    GLFWwindow* window = glfwCreateWindow(640, 480, "Simple Triangle", nullptr, nullptr);
+    GLFWwindow *window = glfwCreateWindow(640, 480, "Simple Triangle", nullptr, nullptr);
     if (!window) {
         glfwTerminate();
         return -1;
@@ -92,6 +98,14 @@ int main() {
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
+    // Vertex Elemental buffer
+    GLuint ebo;
+    glGenBuffers(1, &ebo);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+
+
     std::string vertex_src = load_source(RESOURCE_PATH "/triangle.vert");
     std::string fragment_src = load_source(RESOURCE_PATH "/triangle.frag");
 
@@ -116,12 +130,14 @@ int main() {
     glVertexAttribPointer(vcol_location, 3, GL_FLOAT, GL_FALSE,
                           sizeof(Vertex), reinterpret_cast<void *>(offsetof(Vertex, col)));
 
+
+
     while (!glfwWindowShouldClose(window)) {
         int width, height;
         mat4x4 m, p, mvp;
 
         glfwGetFramebufferSize(window, &width, &height);
-        float ratio =( static_cast<float>(width) / static_cast<float>(height));
+        float ratio = (static_cast<float>(width) / static_cast<float>(height));
 
         glViewport(0, 0, width, height);
         glClear(GL_COLOR_BUFFER_BIT);
@@ -132,7 +148,9 @@ int main() {
         mat4x4_mul(mvp, p, m);
 
         glUniformMatrix4fv(mvp_location, 1, GL_FALSE, reinterpret_cast<const GLfloat *>(mvp));
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
