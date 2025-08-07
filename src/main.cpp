@@ -7,17 +7,16 @@
 #include <glm/vec3.hpp>
 
 #include "glm/mat4x4.hpp"
-#include "glm/matrix.hpp"
 #include "glm/ext/matrix_clip_space.hpp"
 #include "glm/ext/matrix_transform.hpp"
-#include "glm/gtc/type_ptr.inl"
+#include "glm/gtc/type_ptr.hpp"
 
 
 
-typedef struct Vertex {
+struct Vertex {
     glm::vec2 pos;
     glm::vec3 col;
-} Vertex;
+};
 
 static constexpr Vertex vertices[4] = {
     {{-1.f, 1.f}, {1.f, 0.f, 0.f}},
@@ -118,11 +117,11 @@ int main() {
     const std::string vertex_src = load_source(RESOURCE_PATH "/triangle.vert");
     const std::string fragment_src = load_source(RESOURCE_PATH "/triangle.frag");
 
-    const GLuint VAO = compile_shader(GL_VERTEX_SHADER, vertex_src);
+    const GLuint vertex_shader = compile_shader(GL_VERTEX_SHADER, vertex_src);
     const GLuint fragment_shader = compile_shader(GL_FRAGMENT_SHADER, fragment_src);
 
     const GLuint program = glCreateProgram();
-    glAttachShader(program, VAO);
+    glAttachShader(program, vertex_shader);
     glAttachShader(program, fragment_shader);
     glLinkProgram(program);
 
@@ -153,7 +152,7 @@ int main() {
         glm::mat4 model(1);
         model = glm::scale(model, glm::vec3(0.3f));
         const auto new_position_y = sin(glfwGetTime());
-        model = glm::translate(model, glm::vec3(0.f, new_position_y * .3f, 0.f));
+        model = glm::translate(model, glm::vec3(0.f, new_position_y , 0.f));
         const float aspect = static_cast<float>(width) / static_cast<float>(height);
 
         glm::mat4x4  projection;
@@ -176,7 +175,7 @@ int main() {
     }
 
     glDeleteProgram(program);
-    glDeleteShader(VAO);
+    glDeleteShader(vertex_shader);
     glDeleteShader(fragment_shader);
     glDeleteBuffers(1, &vbo);
     glDeleteVertexArrays(1, &vao);
