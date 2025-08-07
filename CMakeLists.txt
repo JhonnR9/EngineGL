@@ -23,6 +23,8 @@ FetchContent_MakeAvailable(glfw)
 
 add_executable(EngineGL
         src/main.cpp
+        src/App.cpp
+        src/App.h
 )
 
 target_include_directories(EngineGL PRIVATE "src/vendor")
