@@ -28,6 +28,7 @@ add_executable(EngineGL
 target_include_directories(EngineGL PRIVATE "src/vendor")
 target_sources(EngineGL PRIVATE src/vendor//glad/glad.c)
 
+
 target_link_libraries(EngineGL
         PRIVATE
         glfw
