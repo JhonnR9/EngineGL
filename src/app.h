@@ -16,7 +16,10 @@ class App {
 
     App() = default;
     GLFWwindow* window {nullptr};
+
 public:
+    [[nodiscard]] GLFWwindow * get_window() const {return window;}
+
     App(const App &) = delete;
     App &operator=(const App &) = delete;
 
@@ -30,6 +33,7 @@ public:
     static void error_callback(int error, const char *description);
 
     void init();
+    void loop();
     void key_callback(GLFWwindow *win, int key, int scancode, int action, int mods);
 };
 

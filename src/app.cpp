@@ -51,6 +51,10 @@ void App::init() {
 
 }
 
+void App::loop() {
+
+}
+
 void App::key_callback(GLFWwindow *win, const int key, int scancode, const int action, int mods) {
     if (key == GLFW_KEY_LEFT && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
         camera_position.x += 0.01f;

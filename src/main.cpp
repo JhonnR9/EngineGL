@@ -14,6 +14,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image/stb_image.h>
 
+#include "app.h"
 
 struct Vertex {
     glm::vec2 pos;
@@ -31,12 +32,6 @@ static constexpr GLuint indices[6] = {
     0, 1, 2,
     2, 3, 0
 };
-
-static bool is_fullscreen = false;
-static int windowed_xpos = 100, windowed_ypos = 100;
-static int windowed_width = 640, windowed_height = 480;
-glm::vec2 camera_position;
-
 
 std::string load_source(const std::string &file_path) {
     std::ifstream file(file_path);
@@ -74,44 +69,6 @@ std::string load_source(const std::string &file_path) {
     return texture;
 }
 
-static void error_callback(int error, const char *description) {
-    std::cerr << "GLFW Error: " << description << std::endl;
-}
-
-static void key_callback(GLFWwindow *win, const int key, int scancode,const int action, int mods) {
-    if (key == GLFW_KEY_LEFT && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
-        camera_position.x += 0.01f;
-    }else if (key == GLFW_KEY_RIGHT && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
-        camera_position.x -= 0.01f;
-    }else if (key == GLFW_KEY_DOWN && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
-        camera_position.y += 0.01f;
-    }else if (key == GLFW_KEY_UP && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
-        camera_position.y -= 0.01f;
-    }
-
-    if ((key == GLFW_KEY_F11 || key==GLFW_KEY_ESCAPE) && action == GLFW_PRESS) {
-
-        if ( key == GLFW_KEY_ESCAPE) {
-            is_fullscreen = false;
-        }else {
-            is_fullscreen = !is_fullscreen;
-        }
-
-        if (is_fullscreen) {
-            glfwGetWindowPos(win, &windowed_xpos, &windowed_ypos);
-            glfwGetWindowSize(win, &windowed_width, &windowed_height);
-
-            GLFWmonitor* monitor = glfwGetPrimaryMonitor();
-            const GLFWvidmode* mode = glfwGetVideoMode(monitor);
-
-            glfwSetWindowMonitor(win, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
-        } else {
-            glfwSetWindowMonitor(win, nullptr, windowed_xpos, windowed_ypos, windowed_width, windowed_height, 0);
-        }
-    }
-}
-
-
 GLuint compile_shader(const GLenum type, const std::string &source) {
     const GLuint shader = glCreateShader(type);
     const char *src = source.c_str();
@@ -130,32 +87,8 @@ GLuint compile_shader(const GLenum type, const std::string &source) {
 }
 
 int main() {
-    glfwWindowHint(GLFW_SAMPLES, 4);
-    static GLFWwindow* window = nullptr;
-    glfwSetErrorCallback(error_callback);
-
-    if (!glfwInit())
-        return -1;
-
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-    window = glfwCreateWindow(windowed_width, windowed_height, "Image Viewer (OpenGL Low-Level)", nullptr, nullptr);
-    if (!window) {
-        glfwTerminate();
-        return -1;
-    }
-
-    glfwMakeContextCurrent(window);
-    glfwSetKeyCallback(window, key_callback);
-
-    if (!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress))) {
-        std::cerr << "Failed to initialize GLAD" << std::endl;
-        return -1;
-    }
-
-    glfwSwapInterval(1);
+    App& app = App::getInstance();
+    app.init();
 
     // Vertex Array Object
     GLuint vao;
@@ -211,22 +144,18 @@ int main() {
     const GLuint texture =  load_texture(RESOURCE_PATH"/texture.jpg", text_width, text_height);
 
 
-    while (!glfwWindowShouldClose(window)) {
+    while (!glfwWindowShouldClose(app.get_window())) {
         int width, height;
-        glfwGetFramebufferSize(window, &width, &height);
+        glfwGetFramebufferSize(app.get_window(), &width, &height);
         glViewport(0, 0, width, height);
         glClear(GL_COLOR_BUFFER_BIT);
         glClearColor(0.1, 0.1, 0.14, 1.0);
 
         const float texture_aspect = static_cast<float>(text_width) / static_cast<float>(text_height);
-
         glm::mat4 model(1);
 
         model = glm::rotate(model, glm::radians(90.f), glm::vec3(0.0f, 0.0f, 1.0f));
         model = glm::scale(model, glm::vec3(texture_aspect, 1.0f, 1.0f));
-
-        //model = glm::scale(model, glm::vec3(.8f));
-
 
         const float aspect = static_cast<float>(width) / static_cast<float>(height);
 
@@ -239,7 +168,6 @@ int main() {
 
         glm::mat4x4 view(1.0f);
 
-        view = glm::translate(view, glm::vec3(camera_position, 0.0f));
         glm::mat4 mvp = projection * view * model;
 
         glUniformMatrix4fv(mvp_location, 1, GL_FALSE, glm::value_ptr(mvp));
@@ -250,7 +178,7 @@ int main() {
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 
-        glfwSwapBuffers(window);
+        glfwSwapBuffers(app.get_window());
         glfwPollEvents();
     }
     glDeleteTextures(1, &texture);
@@ -261,7 +189,7 @@ int main() {
     glDeleteVertexArrays(1, &vao);
     glDeleteBuffers(1, &ebo);
 
-    glfwDestroyWindow(window);
+    glfwDestroyWindow(app.get_window());
     glfwTerminate();
     return 0;
 }
