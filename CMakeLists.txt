@@ -25,8 +25,16 @@ add_executable(EngineGL
         src/main.cpp
         src/App.cpp
         src/App.h
-        src/MeshInfo.cpp
-        src/MeshInfo.h
+        src/graphics/MeshInfo.cpp
+        src/graphics/MeshInfo.h
+        src/graphics/Shader.cpp
+        src/graphics/Shader.h
+        src/graphics/SpriteBatch.cpp
+        src/graphics/SpriteBatch.h
+        src/graphics/Texture.cpp
+        src/graphics/Texture.h
+        src/graphics/Material.cpp
+        src/graphics/Material.h
 )
 
 target_include_directories(EngineGL PRIVATE "src/vendor")
