@@ -60,6 +60,10 @@ void SpriteBatch::draw(Drawable& target) {
 
 }
 
+void SpriteBatch::flush() {
+    make_draw_call();
+}
+
 void SpriteBatch::make_draw_call() {
     // TODO implementation of draw yourself
 }

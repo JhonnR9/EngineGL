@@ -117,6 +117,9 @@ public:
      * @return Reference to the internal list of custom attribute configurations.
      */
     const std::vector<VertexAttribPointer>& get_custom_vertex_attrib_pointers();
+
+    void clear_all();
+
 };
 
 #endif // MESH_H

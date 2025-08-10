@@ -24,6 +24,13 @@ const std::vector<VertexAttribPointer>& Mesh::get_custom_vertex_attrib_pointers(
     return custom_attrib_pointers;
 }
 
+void Mesh::clear_all() {
+    this->vertices.clear();
+    this->custom_attrib_pointers.clear();
+    this->override_default_vertices = false;
+    this->custom_indices.clear();
+}
+
 
 void Mesh::add_vertex(const Vertex& vertex) {
     this->vertices.push_back(vertex);
