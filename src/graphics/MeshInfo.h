@@ -11,7 +11,6 @@
 #include "glm/vec2.hpp"
 #include "glm/vec3.hpp"
 
-
 struct Vertex {
     glm::vec3 position;
     glm::vec3 color;
@@ -19,8 +18,8 @@ struct Vertex {
 };
 
 struct GLBuffer {
-    GLuint id;
-    GLenum target;
+    GLuint id{};
+    GLenum target{};
 };
 class MeshInfo {
     std::vector<GLBuffer> buffers;

@@ -12,6 +12,7 @@
 #include "glm/gtc/type_ptr.hpp"
 
 #include "app.h"
+#include "graphics/Material.h"
 #include "graphics/Shader.h"
 #include "graphics/Texture.h"
 
@@ -21,9 +22,9 @@ struct Vertex {
 };
 
 Vertex vertices[4] = {
-    {{-1.f, 1.f}, { 0.0f, 0.0f,}},
-    {{ 1.f, 1.f}, { 1.0f, 0.0f,}},
-    {{ 1.f, -1.f}, {1.f,  1.0f}},
+    {{-1.f, 1.f}, {0.0f, 0.0f,}},
+    {{1.f, 1.f}, {1.0f, 0.0f,}},
+    {{1.f, -1.f}, {1.f, 1.0f}},
     {{-1.f, -1.f}, {0.0f, 1.0f}}
 };
 
@@ -34,9 +35,15 @@ static constexpr GLuint indices[6] = {
 
 
 int main() {
-    App& app = App::getInstance();
+    App &app = App::getInstance();
     app.init();
-
+    Material material;
+    material.set_shader(
+        std::make_unique<Shader>(
+            SourcePath(RESOURCE_PATH"/default_shader.vert", RESOURCE_PATH"/default_shader.frag")
+        )
+    );
+    const Texture texture(RESOURCE_PATH"/texture.jpg");
     // Vertex Array Object
     GLuint vao;
     glGenVertexArrays(1, &vao);
@@ -54,22 +61,18 @@ int main() {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-    const auto shader = Shader(SourcePath(RESOURCE_PATH"/triangle.vert",RESOURCE_PATH"/triangle.frag"));
-    //shader.use();
-    const GLint mvp_location = glGetUniformLocation(shader.get_program(), "MVP");
-    const GLint texture_location = glGetUniformLocation(shader.get_program(), "texture1");
-    glUniform1i(texture_location,0);
-
+    const auto shader = Shader(SourcePath(RESOURCE_PATH"/default_shader.vert",RESOURCE_PATH"/default_shader.frag"));
+    const GLint mvp_location = material.get_uniform_location("MVP");
     // position x and y  (2 floats)
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), static_cast<void *>(nullptr));
 
     // texCoords (2 floats)
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void *>(offsetof(Vertex, texCoord)));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex),
+                          reinterpret_cast<void *>(offsetof(Vertex, texCoord)));
     glEnableVertexAttribArray(1);
 
 
-    const Texture texture(RESOURCE_PATH"/texture.jpg");
 
 
     while (!glfwWindowShouldClose(app.get_window())) {
@@ -83,7 +86,7 @@ int main() {
         const float texture_aspect = static_cast<float>(texture.get_width()) / static_cast<float>(texture.get_height());
         glm::mat4 model(1);
 
-        model = glm::rotate(model, glm::radians(90.f), glm::vec3(0.0f, 0.0f, 1.0f));
+       // model = glm::rotate(model, glm::radians(90.f), glm::vec3(0.0f, 0.0f, 1.0f));
         model = glm::scale(model, glm::vec3(texture_aspect, 1.0f, 1.0f));
 
         const float aspect = static_cast<float>(width) / static_cast<float>(height);
@@ -105,7 +108,6 @@ int main() {
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
-
 
 
         glfwSwapBuffers(app.get_window());

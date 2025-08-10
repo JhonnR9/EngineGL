@@ -11,14 +11,19 @@
 
 
 class Material {
-std::unique_ptr<Shader> Shader;
-std::unique_ptr<Texture> Texture;
+    std::unique_ptr<Shader> shader;
+    std::unique_ptr<Texture> texture;
 
-    public:
-    Material();
-    ~Material();
+public:
+    Material()=default;
+    ~Material()=default;
+
+    GLint get_uniform_location(const char* name) const;
+    void set_shader(std::unique_ptr<Shader> shader);
+    void set_texture(std::unique_ptr<Texture> texture);
+
+    void use() const;
 };
-
 
 
 #endif //MATERIAL_H

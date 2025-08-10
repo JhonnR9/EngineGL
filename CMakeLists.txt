@@ -35,6 +35,7 @@ add_executable(EngineGL
         src/graphics/Texture.h
         src/graphics/Material.cpp
         src/graphics/Material.h
+        src/graphics/Drawable.h
 )
 
 target_include_directories(EngineGL PRIVATE "src/vendor")
