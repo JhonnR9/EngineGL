@@ -3,20 +3,9 @@
 //
 
 #include "SpriteBatch.h"
-
 #include <iostream>
-#include <ostream>
 
-/**
- * Creates and initializes the necessary OpenGL buffers for the SpriteBatch:
- * - Generates and binds a Vertex Array Object (VAO).
- * - Generates and binds a Vertex Buffer Object (VBO), allocating GPU memory
- *   based on the logical draw call limit plus a 50% safety margin to handle overflow.
- * - Generates and binds an Element Buffer Object (EBO), similarly allocating
- *   memory with a 50% margin for safety.
- *
- * This setup prepares the buffers for dynamic drawing operations.
- */
+
 void SpriteBatch::init() {
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
@@ -24,40 +13,59 @@ void SpriteBatch::init() {
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
-    // Allocate GPU memory based on the logical draw call limit (vbo_men_max_alloc),
+    // Allocate GPU memory based on the logical draw call limit (max_vbo_alloc),
     // plus 50% extra as a safety margin to ensure the buffer can handle slight overflows.
-    glBufferData(GL_ARRAY_BUFFER, vbo_men_max_alloc + (vbo_men_max_alloc / 2), nullptr, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, max_vbo_alloc + (max_vbo_alloc / 2), nullptr, GL_DYNAMIC_DRAW);
 
-    // Same, but now ebo (ebo_mem_max_alloc),
+    // Do the same for the EBO (max_ebo_alloc), with an additional 50% margin.
     glGenBuffers(1, &EBO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, ebo_mem_max_alloc + (ebo_mem_max_alloc / 2), nullptr, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, max_ebo_alloc + (max_ebo_alloc / 2), nullptr, GL_DYNAMIC_DRAW);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+
+    // -------- Set default pointers -------- //
+    // position x y z  (3 floats)
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), static_cast<void *>(nullptr));
+
+    // color r g b a (4 floats)
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex),
+        reinterpret_cast<void *>(offsetof(Vertex, color)));
+
+    // texCoords (2 floats)
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex),
+        reinterpret_cast<void *>(offsetof(Vertex, texcoord)));
 }
 
 
 void SpriteBatch::schedule_mesh_draw(const Mesh &mesh) {
     const unsigned int data_size = mesh.get_vertices().size() * sizeof(Vertex);
-    vbo_gpu_current_alloc += data_size;
-    vertices.insert( vertices.end(),mesh.get_vertices().begin(), mesh.get_vertices().end());
+    current_vbo_alloc += data_size;
 
+    if (mesh.get_custom_vertices().empty() || mesh.get_custom_vertex_attrib_pointers().empty()) {
+        if (mesh.get_vertices().empty()) {
+            std::cerr << "Empty vertices!" << std::endl;
+            return;
+        }
+        vertices.insert(vertices.end(), mesh.get_vertices().begin(), mesh.get_vertices().end());
+    } else {
+
+    }
 }
 
-/**
- * This function only schedules the drawing and prepares the buffer in the CPU,
- * the drawing only occurs when we have enough data to compensate for the draw call
- * @param target object that will be drawn with information about Vertices, buffers and points
- */
-void SpriteBatch::draw(Drawable& target) {
+
+void SpriteBatch::draw(Drawable &target) {
     assert(!target.get_mesh_info().get_vertices().empty() && "Vertices could not be empty");
 
     schedule_mesh_draw(target.get_mesh_info());
 
-    if (vbo_gpu_current_alloc >= vbo_men_max_alloc ||
-        ebo_gpu_current_alloc >= ebo_mem_max_alloc) {
+    if (current_vbo_alloc >= max_vbo_alloc ||
+        current_ebo_alloc >= max_ebo_alloc) {
         make_draw_call();
-
     }
-
 }
 
 void SpriteBatch::flush() {

@@ -20,7 +20,7 @@ const std::vector<Vertex> & Mesh::get_vertices() const {
     return this->vertices;
 }
 
-const std::vector<VertexAttribPointer>& Mesh::get_custom_vertex_attrib_pointers() {
+const std::vector<VertexAttribPointer>& Mesh::get_custom_vertex_attrib_pointers() const {
     return custom_attrib_pointers;
 }
 
@@ -29,6 +29,14 @@ void Mesh::clear_all() {
     this->custom_attrib_pointers.clear();
     this->override_default_vertices = false;
     this->custom_indices.clear();
+}
+
+const std::vector<GLuint>& Mesh::get_custom_indices() const {
+    return custom_indices;
+}
+
+const std::vector<GLfloat>& Mesh::get_custom_vertices() const {
+    return custom_vertices;
 }
 
 

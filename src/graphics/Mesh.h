@@ -10,13 +10,14 @@
 #include "glad/glad.h"
 #include "glm/vec2.hpp"
 #include "glm/vec3.hpp"
+#include "glm/vec4.hpp"
 
 /**
  * Represents a standard vertex with position, color, and texture coordinates.
  */
 struct Vertex {
     glm::vec3 position;
-    glm::vec3 color;
+    glm::vec4 color;
     glm::vec2 texcoord;
 };
 
@@ -28,7 +29,7 @@ struct VertexAttribPointer {
     GLenum type;
     GLboolean normalized;
     GLsizei stride;
-    const void* pointer;
+    const void *pointer;
 };
 
 /**
@@ -59,6 +60,7 @@ class Mesh {
 
 public:
     Mesh() = default;
+
     ~Mesh() = default;
 
     /**
@@ -66,7 +68,7 @@ public:
      *
      * @param vertex The vertex to add.
      */
-    void add_vertex(const Vertex& vertex);
+    void add_vertex(const Vertex &vertex);
 
     /**
      * Adds custom vertex data for use with custom shaders.
@@ -75,14 +77,14 @@ public:
      *
      * @param vertices Flat array of custom vertex data (e.g., float values).
      */
-    void add_custom_vertex(std::vector<GLfloat>& vertices);
+    void add_custom_vertex(std::vector<GLfloat> &vertices);
 
     /**
      * Replaces all previously added default-format vertices with a new list.
      *
      * @param vertices A list of default-format vertices.
      */
-    void add_vertices(const std::vector<Vertex>& vertices);
+    void add_vertices(const std::vector<Vertex> &vertices);
 
     /**
      * Adds a custom vertex attribute pointer definition to the mesh.
@@ -93,7 +95,7 @@ public:
      * @param override_default If true, disables the default attributes (position, color, texcoord).
      *                         Set to true only if your shader does not rely on default attributes.
      */
-    void add_custom_vertex_attrib_pointer(const VertexAttribPointer& attrib_pointer, bool override_default = false);
+    void add_custom_vertex_attrib_pointer(const VertexAttribPointer &attrib_pointer, bool override_default = false);
 
     /**
      * Adds custom index data used for drawing the mesh with indexed rendering (e.g., GL_TRIANGLES).
@@ -109,16 +111,21 @@ public:
      *
      * @return Reference to the internal vertex list.
      */
-    [[nodiscard]] const std::vector<Vertex>& get_vertices() const;
+    [[nodiscard]] const std::vector<Vertex> &get_vertices() const;
 
     /**
      * Returns all custom vertex attribute pointers.
      *
      * @return Reference to the internal list of custom attribute configurations.
      */
-    const std::vector<VertexAttribPointer>& get_custom_vertex_attrib_pointers();
+    [[nodiscard]] const  std::vector<VertexAttribPointer> &get_custom_vertex_attrib_pointers() const;
+    [[nodiscard]] const  std::vector<GLuint> &get_custom_indices() const;
+    [[nodiscard]] const  std::vector<GLfloat> &get_custom_vertices() const;
 
     void clear_all();
+
+
+
 
 };
 
