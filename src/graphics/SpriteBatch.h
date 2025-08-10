@@ -26,11 +26,11 @@ class SpriteBatch {
     // OpenGL buffers for uploading to GPU
     GLuint VAO{0}, VBO{0}, EBO{0};
 
+    std::unique_ptr<Shader> default_shader;
+
     // Memory allocation control based on buffer usage limitsx'
     unsigned int max_vbo_alloc = 1024 * 1024; // 1MB for vertex buffer
-    unsigned int max_ebo_alloc = 256 * 1024;  // 256KB for element buffer
     unsigned int current_vbo_alloc {0};       // Current VBO allocation on the GPU
-    unsigned int current_ebo_alloc {0};       // Current EBO allocation on the GPU
 
     /**
      * Initializes the necessary OpenGL buffers for the SpriteBatch:
@@ -58,8 +58,8 @@ class SpriteBatch {
     void make_draw_call();
 
 public:
-    SpriteBatch() = default;
-    ~SpriteBatch() = default;
+    SpriteBatch();
+    ~SpriteBatch();
 
     /**
      * Schedules a draw for a Drawable object and prepares the necessary buffers on the CPU.
@@ -75,6 +75,10 @@ public:
      * It performs a final draw call to flush accumulated data.
      */
     void flush();
+
+    void begin() const;
+
+    void end();
 };
 
 #endif // SPRITEBATCH_H

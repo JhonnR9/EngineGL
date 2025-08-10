@@ -37,11 +37,7 @@ GLuint Shader::compile_shader(const GLenum type, const std::string &source) {
     return shader;
 }
 
-Shader::Shader(const SourcePath &source_path) {
-
-    const std::string vertex_src = load_source(source_path.vertex);
-    const std::string fragment_src = load_source(source_path.fragment);
-
+void Shader::create_shader(const char *vertex_src, const char *fragment_src) {
     const GLuint vertex_shader = compile_shader(GL_VERTEX_SHADER, vertex_src);
     const GLuint fragment_shader = compile_shader(GL_FRAGMENT_SHADER, fragment_src);
 
@@ -62,7 +58,19 @@ Shader::Shader(const SourcePath &source_path) {
     glDeleteShader(vertex_shader);
     glDeleteShader(fragment_shader);
 
+}
 
+Shader::Shader(const SourcePath &source_path) {
+
+    const std::string vertex_src = load_source(source_path.vertex);
+    const std::string fragment_src = load_source(source_path.fragment);
+
+    create_shader(vertex_src.c_str(), fragment_src.c_str());
+
+}
+
+Shader::Shader(const char *vertex_shader_src, const char *fragment_shader_src) {
+    create_shader(vertex_shader_src, fragment_shader_src);
 }
 
 Shader::~Shader() {
