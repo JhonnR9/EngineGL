@@ -25,8 +25,8 @@ add_executable(EngineGL
         src/main.cpp
         src/App.cpp
         src/App.h
-        src/graphics/MeshInfo.cpp
-        src/graphics/MeshInfo.h
+        src/graphics/Mesh.cpp
+        src/graphics/Mesh.h
         src/graphics/Shader.cpp
         src/graphics/Shader.h
         src/graphics/SpriteBatch.cpp

@@ -35,10 +35,11 @@ void SpriteBatch::init() {
 }
 
 
-void SpriteBatch::schedule_mesh_draw(const MeshInfo &mesh) {
+void SpriteBatch::schedule_mesh_draw(const Mesh &mesh) {
     const unsigned int data_size = mesh.get_vertices().size() * sizeof(Vertex);
     vbo_gpu_current_alloc += data_size;
     vertices.insert( vertices.end(),mesh.get_vertices().begin(), mesh.get_vertices().end());
+
 }
 
 /**

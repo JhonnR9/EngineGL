@@ -7,17 +7,17 @@
 #include <vector>
 
 #include "Drawable.h"
-#include "MeshInfo.h"
+#include "Mesh.h"
 
 class SpriteBatch {
-    std::vector<MeshInfo> meshes;
+    std::vector<Mesh> meshes;
 
     // the current batch for rendering
     std::vector<Vertex> vertices;
     bool has_drawn_this_frame = false;
 
     GLuint VAO{0}, VBO{0}, EBO{0};
-    unsigned int vbo_men_max_alloc = 2048 * 1024; // 2MB
+    unsigned int vbo_men_max_alloc = 1024 * 1024; // 1MB
     unsigned int ebo_mem_max_alloc = 256 * 1024;  // 256KB
 
     unsigned int vbo_gpu_current_alloc {0};
@@ -35,7 +35,7 @@ class SpriteBatch {
      */
     void init();
 
-    void schedule_mesh_draw(const MeshInfo& mesh);
+    void schedule_mesh_draw(const Mesh& mesh);
 public:
     SpriteBatch() = default;
 

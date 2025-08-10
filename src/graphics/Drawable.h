@@ -6,14 +6,14 @@
 #define DRAWABLE_H
 
 #include "Material.h"
-#include "MeshInfo.h"
+#include "Mesh.h"
 
 
 class Drawable {
     public:
     virtual ~Drawable() = default;
 
-    virtual MeshInfo& get_mesh_info();
+    virtual Mesh& get_mesh_info();
     virtual Material& get_material();
 };
 
