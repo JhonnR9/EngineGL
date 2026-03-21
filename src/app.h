@@ -11,7 +11,7 @@ class GLFWwindow;
 class App {
     bool is_fullscreen = false;
     int windowed_xpos = 100, windowed_ypos = 100;
-    int windowed_width = 640, windowed_height = 480;
+    int windowed_width = 1366, windowed_height = 768;
     glm::vec2 camera_position = {glm::vec2(0.f)};
 
     App() = default;
