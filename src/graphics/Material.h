@@ -6,13 +6,12 @@
 #define MATERIAL_H
 #include <memory>
 
-#include "Shader.h"
-#include "Texture.h"
+#include "shader.h"
 
-
+class Texture2D;
 class Material {
     std::unique_ptr<Shader> shader;
-    std::unique_ptr<Texture> texture;
+    std::unique_ptr<Texture2D> texture;
 
 public:
     Material()=default;
@@ -20,8 +19,8 @@ public:
 
     GLint get_uniform_location(const char* name) const;
     void set_shader(std::unique_ptr<Shader> shader);
-    void set_texture(std::unique_ptr<Texture> texture);
-    Texture& get_texture() const;
+    void set_texture(std::unique_ptr<Texture2D> texture);
+    Texture2D& get_texture() const;
 
     void use() const;
 };

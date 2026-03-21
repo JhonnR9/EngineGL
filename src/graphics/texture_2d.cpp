@@ -2,19 +2,20 @@
 // Created by jhone on 09/08/2025.
 //
 
-#include "Texture.h"
+#include "texture_2d.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include <iostream>
 #include <ostream>
 #include <stb_image/stb_image.h>
 
-GLuint Texture::load_texture(const char *path, int &width, int &height) {
+GLuint Texture2D::load_texture(const char *path, int &width, int &height) {
     int channels;
 
     uint8_t* data = stbi_load(path, &width, &height, &channels, 4); // 4 RGBA
 
     if (!data) {
         std::cerr << "Failed to load texture" << std::endl;
+        return 0;
     }
 
     glGenTextures(1, &texture);
@@ -34,31 +35,32 @@ GLuint Texture::load_texture(const char *path, int &width, int &height) {
     return texture;
 }
 
-Texture::Texture(const char *path) {
+Texture2D::Texture2D(const char *path) {
     width=0, height=0;
     texture = load_texture(path, width, height);
 
 }
 
-Texture::~Texture() {
+Texture2D::~Texture2D() {
     if (texture) {
         glDeleteTextures(1, &texture);
+        texture = 0;
     }
 }
 
-GLuint Texture::get_texture() const {
+GLuint Texture2D::get_texture() const {
     return texture;
 }
 
-unsigned int Texture::get_width() const {
+unsigned int Texture2D::get_width() const {
     return width;
 }
 
-unsigned int Texture::get_height() const {
+unsigned int Texture2D::get_height() const {
     return height;
 }
 
-void Texture::use() const {
+void Texture2D::use() const {
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texture);
 }

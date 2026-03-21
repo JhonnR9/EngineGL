@@ -26,13 +26,13 @@ FetchContent_MakeAvailable(glfw)
 
 add_executable(EngineGL
         src/main.cpp
-        src/App.cpp
-        src/graphics/Mesh.cpp
-        src/graphics/Shader.cpp
-        src/graphics/Texture.cpp
-        src/graphics/Material.cpp
-        src/graphics/Material.h
+        src/app.cpp
+        src/graphics/shader.cpp
+        src/graphics/texture_2d.cpp
+        src/graphics/material.cpp
         src/graphics/renderer.cpp
+        src/sprite.cpp
+        src/sprite.h
 )
 
 target_include_directories(EngineGL PRIVATE "src/vendor")

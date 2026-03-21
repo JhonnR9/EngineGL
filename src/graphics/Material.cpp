@@ -3,6 +3,7 @@
 //
 
 #include "Material.h"
+#include "texture_2d.h"
 
 GLint Material::get_uniform_location(const char *name) const {
     return glGetUniformLocation(this->shader->get_program(), name);
@@ -12,11 +13,11 @@ void Material::set_shader(std::unique_ptr<Shader> shader) {
     this->shader = std::move(shader);
 }
 
-void Material::set_texture(std::unique_ptr<Texture> texture) {
+void Material::set_texture(std::unique_ptr<Texture2D> texture) {
     this->texture = std::move(texture);
 }
 
-Texture & Material::get_texture() const {
+Texture2D & Material::get_texture() const {
     return *this->texture;
 }
 

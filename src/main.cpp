@@ -14,9 +14,9 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "app.h"
-#include "graphics/Material.h"
-#include "graphics/Shader.h"
-#include "graphics/Texture.h"
+#include "graphics/material.h"
+#include "graphics/shader.h"
+#include "graphics/texture_2d.h"
 
 struct Vertex {
     glm::vec2 pos;
@@ -69,7 +69,7 @@ int main() {
     material.set_shader(std::make_unique<Shader>(
         SourcePath(RESOURCE_PATH"/default_shader.vert", RESOURCE_PATH"/default_shader.frag")
     ));
-    material.set_texture(std::move(std::make_unique<Texture>(RESOURCE_PATH"/hutao.png")));
+    material.set_texture(std::move(std::make_unique<Texture2D>(RESOURCE_PATH"/texture.jpg")));
 
     GLuint vao;
     glGenVertexArrays(1, &vao);
@@ -112,7 +112,7 @@ int main() {
         glVertexAttribDivisor(3 + i, 1);
     }
 
-    glfwSwapInterval(0);
+    glfwSwapInterval(1);
 
     while (!glfwWindowShouldClose(app.get_window())) {
         int width, height;

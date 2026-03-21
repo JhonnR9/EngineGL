@@ -5,6 +5,8 @@ in vec3 vColor;
 out vec4 FragColor;
 
 uniform sampler2D texture1;
+//uniform sampler2D textures[16];
+
 
 void main()
 {
