@@ -6,6 +6,7 @@ project(EngineGL VERSION 0.0.1)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(GLM_BUILD_LIBRARY OFF)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 
 find_package(OpenGL REQUIRED)
@@ -18,33 +19,33 @@ FetchContent_Declare(
         GIT_REPOSITORY https://github.com/glfw/glfw.git
         GIT_TAG        3.3.8
 )
+
+set(BUILD_SHARED_LIBS ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(glfw)
 
 
 add_executable(EngineGL
         src/main.cpp
         src/App.cpp
-        src/App.h
         src/graphics/Mesh.cpp
-        src/graphics/Mesh.h
         src/graphics/Shader.cpp
-        src/graphics/Shader.h
-        src/graphics/SpriteBatch.cpp
-        src/graphics/SpriteBatch.h
         src/graphics/Texture.cpp
-        src/graphics/Texture.h
         src/graphics/Material.cpp
         src/graphics/Material.h
-        src/graphics/Drawable.h
+        src/graphics/renderer.cpp
 )
 
 target_include_directories(EngineGL PRIVATE "src/vendor")
-target_sources(EngineGL PRIVATE src/vendor//glad/glad.c)
 
+add_library(glad STATIC src/vendor/glad/glad.c)
+target_include_directories(glad PUBLIC src/vendor/glad)
+target_include_directories(EngineGL PRIVATE src)
 
 target_link_libraries(EngineGL
         PRIVATE
         glfw
         OpenGL::GL
         glm::glm
+        glad
 )
+

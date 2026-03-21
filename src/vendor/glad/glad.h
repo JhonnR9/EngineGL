@@ -892,7 +892,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-#include "cmake-build-debug/_deps/glfw-src/deps/glad/khrplatform.h"
+#include "khrplatform.h"
 
 struct gladGLversionStruct {
     int major;
@@ -935,7 +935,7 @@ GLAPI int gladLoadGLLoader(GLADloadproc);
 
 GLAPI int gladLoadGLES2Loader(GLADloadproc);
 
-#include "src/vendor/glad/glad.h"
+#include "glad.h"
 typedef unsigned int GLenum;
 typedef unsigned char GLboolean;
 typedef unsigned int GLbitfield;

@@ -21,6 +21,7 @@ public:
     GLint get_uniform_location(const char* name) const;
     void set_shader(std::unique_ptr<Shader> shader);
     void set_texture(std::unique_ptr<Texture> texture);
+    Texture& get_texture() const;
 
     void use() const;
 };

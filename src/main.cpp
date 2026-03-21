@@ -22,11 +22,12 @@ struct Vertex {
 };
 
 Vertex vertices[4] = {
-    {{-1.f, 1.f}, {0.0f, 0.0f,}},
-    {{1.f, 1.f}, {1.0f, 0.0f,}},
-    {{1.f, -1.f}, {1.f, 1.0f}},
-    {{-1.f, -1.f}, {0.0f, 1.0f}}
+    {{0.f, 0.f}, {0.0f, 0.0f}},
+    {{1.f, 0.f}, {1.0f, 0.0f}},
+    {{1.f, 1.f}, {1.0f, 1.0f}},
+    {{0.f, 1.f}, {0.0f, 1.0f}}
 };
+
 
 static constexpr GLuint indices[6] = {
     0, 1, 2,
@@ -43,7 +44,9 @@ int main() {
             SourcePath(RESOURCE_PATH"/default_shader.vert", RESOURCE_PATH"/default_shader.frag")
         )
     );
-    const Texture texture(RESOURCE_PATH"/texture.jpg");
+
+    material.set_texture(std::move(std::make_unique<Texture>(RESOURCE_PATH"/texture.jpg")));
+
     // Vertex Array Object
     GLuint vao;
     glGenVertexArrays(1, &vao);
@@ -71,48 +74,59 @@ int main() {
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex),
                           reinterpret_cast<void *>(offsetof(Vertex, texCoord)));
     glEnableVertexAttribArray(1);
-
-
-
+    glfwSwapInterval(0);
 
     while (!glfwWindowShouldClose(app.get_window())) {
-        shader.use();
+        material.use();
+
         int width, height;
         glfwGetFramebufferSize(app.get_window(), &width, &height);
-        glViewport(0, 0, width, height);
-        glClear(GL_COLOR_BUFFER_BIT);
-        glClearColor(0.1, 0.1, 0.14, 1.0);
 
-        const float texture_aspect = static_cast<float>(texture.get_width()) / static_cast<float>(texture.get_height());
-        glm::mat4 model(1);
+        // mundo virtual fixo
+        const float virtualWidth = 840.0f;
+        const float virtualHeight = 480.0f;
+        float windowAspect = float(width) / float(height);
+        float worldAspect = virtualWidth / virtualHeight;
 
-       // model = glm::rotate(model, glm::radians(90.f), glm::vec3(0.0f, 0.0f, 1.0f));
-        model = glm::scale(model, glm::vec3(texture_aspect, 1.0f, 1.0f));
+        int viewportX = 0, viewportY = 0;
+        int viewportWidth = width, viewportHeight = height;
 
-        const float aspect = static_cast<float>(width) / static_cast<float>(height);
+        if (windowAspect > worldAspect) {
 
-        glm::mat4x4 projection;
-        if (aspect >= 1.0f) {
-            projection = glm::ortho(-aspect, aspect, -1.0f, 1.0f);
+            viewportWidth = int(height * worldAspect);
+            viewportX = (width - viewportWidth) / 2;
         } else {
-            projection = glm::ortho(-1.0f, 1.0f, -1.0f / aspect, 1.0f / aspect);
+            viewportHeight = int(width / worldAspect);
+            viewportY = (height - viewportHeight) / 2;
         }
 
-        glm::mat4x4 view(1.0f);
+        glViewport(viewportX, viewportY, viewportWidth, viewportHeight);
 
-        glm::mat4 mvp = projection * view * model;
+        glClear(GL_COLOR_BUFFER_BIT);
+        glClearColor(0.1f, 0.1f, 0.14f, 1.0f);
 
+        glm::mat4 projection = glm::ortho(0.0f, virtualWidth, virtualHeight, 0.0f, -1.0f, 1.0f);
+
+        float scale = 0.2f;
+        float texture_w = float(material.get_texture().get_width());
+        float texture_h = float(material.get_texture().get_height());
+
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(300, 100, 0.0f));
+        model = glm::rotate(model, glm::radians(90.f), glm::vec3(0.0f, 0.0f, 1.0f));
+        model = glm::scale(model, glm::vec3(texture_w * scale, texture_h * scale, 1.0f));
+
+        glm::mat4 mvp = projection * model;
         glUniformMatrix4fv(mvp_location, 1, GL_FALSE, glm::value_ptr(mvp));
-
-        texture.use();
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 
-
         glfwSwapBuffers(app.get_window());
         glfwPollEvents();
     }
+
+
     glDeleteBuffers(1, &vbo);
     glDeleteVertexArrays(1, &vao);
     glDeleteBuffers(1, &ebo);

@@ -10,6 +10,7 @@
 
 GLuint Texture::load_texture(const char *path, int &width, int &height) {
     int channels;
+
     uint8_t* data = stbi_load(path, &width, &height, &channels, 4); // 4 RGBA
 
     if (!data) {

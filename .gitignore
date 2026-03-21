@@ -1,0 +1,68 @@
+# =========================
+# CLion & CMake
+# =========================
+
+# CLion project files
+.idea/
+*.iml
+
+# CMake generated files
+cmake-build-*/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+CTestTestfile.cmake
+*.cbp
+*.cmake
+*.tmp
+
+# =========================
+# Compiled object files
+# =========================
+*.o
+*.obj
+*.lo
+*.slo
+
+# =========================
+# Compiled static libraries
+# =========================
+*.lib
+*.a
+
+# =========================
+# Compiled dynamic libraries / shared objects
+# =========================
+*.dll
+*.so
+*.dylib
+
+# =========================
+# Executables
+# =========================
+*.exe
+*.out
+*.app
+
+# =========================
+# MinGW / Windows temp files
+# =========================
+*.pdb
+*.ilk
+*.idb
+*.exp
+*.iobj
+*.ipdb
+*.res
+
+
+# =========================
+# Miscellaneous
+# =========================
+*.log
+*.tmp
+*.swp
+*.swo
+*.bak
+*.DS_Store

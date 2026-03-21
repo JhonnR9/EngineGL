@@ -16,6 +16,10 @@ void Material::set_texture(std::unique_ptr<Texture> texture) {
     this->texture = std::move(texture);
 }
 
+Texture & Material::get_texture() const {
+    return *this->texture;
+}
+
 void Material::use() const {
     shader->use();
     texture->use();
