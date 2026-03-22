@@ -15,9 +15,8 @@ class MyScene final : public Scene{
 
     std::unique_ptr<SpriteBatch> batch{nullptr};
     std::shared_ptr<Texture2D> texture1;
-    std::shared_ptr<Texture2D> texture2;
 
-    const int num_draws{2000};
+    const int num_draws{4096};
     unsigned int seed{0};
 
 public:

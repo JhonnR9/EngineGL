@@ -14,8 +14,8 @@ MyScene::MyScene(App &app): Scene(app) {
 
 void MyScene::init() {
     batch = std::make_unique<SpriteBatch>(app.get_windowed_width(), app.get_windowed_height());
-
-    texture1 = std::make_unique<Texture2D>(RESOURCE_PATH"/hutao.png");
+    auto a = Vector2(0.25f, 0.25f);
+    texture1 = std::make_unique<Texture2D>(RESOURCE_PATH"/yuzuha.jpg" ,a);
 
     seed = static_cast<unsigned int>(time(nullptr));
     auto projection = glm::ortho(0.0f, app.VIRTUAL_WIDTH, app.VIRTUAL_HEIGHT, 0.0f, -1.0f, 1.0f);
@@ -29,7 +29,7 @@ void MyScene::update(float delta){
 void MyScene::render() {
 
     float currentTime = glfwGetTime();
-    float rotation = currentTime * (0.5f + static_cast<float>(rand()) / RAND_MAX);
+    float rotation = currentTime * (0.5f + static_cast<float>(rand()) / RAND_MAX) * 20;
 
     srand(seed);
 
@@ -39,7 +39,6 @@ void MyScene::render() {
     batch->begin();
 
     for (int i = 0; i < num_draws; ++i) {
-
         float x = static_cast<float>(rand() % app.get_windowed_width());
         float y = static_cast<float>(rand() % app.get_windowed_height());
 
@@ -52,13 +51,15 @@ void MyScene::render() {
         batch->draw_texture(
             texture1.get(),
             Vector2(x, y),
-            Vector2(0.25f, 0.25f),
+            Vector2(1.f, 1.f),
             rotation,
             Vector2(texture1->get_width() / 2.f, texture1->get_height() / 2.f),
             c,
             Rect()
         );
+
     }
+
 
 
     batch->end();

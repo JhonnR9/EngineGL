@@ -7,8 +7,6 @@
 SpriteBatch::SpriteBatch(float screenWidth, float screenHeight) {
     pipeline.projection = glm::ortho(0.0f, screenWidth, screenHeight, 0.0f, -1.0f, 1.0f);
 
-    pipeline.material = std::make_unique<Material>();
-
     if (!create_default_shader()) {
         std::cerr << "Error creating default shader" << std::endl;
     }
@@ -73,7 +71,7 @@ bool SpriteBatch::create_instance_buffer() {
             GL_FLOAT,
             GL_FALSE,
             sizeof(InstanceData),
-            (void *) (offset)
+            reinterpret_cast<void *>(offset)
         );
         glVertexAttribDivisor(3 + i, 1);
 
@@ -87,7 +85,7 @@ bool SpriteBatch::create_instance_buffer() {
         GL_FLOAT,
         GL_FALSE,
         sizeof(InstanceData),
-        (void *) offsetof(InstanceData, color)
+        reinterpret_cast<void *>(offsetof(InstanceData, color))
     );
     glVertexAttribDivisor(7, 1);
 
@@ -98,7 +96,7 @@ bool SpriteBatch::create_instance_buffer() {
         GL_FLOAT,
         GL_FALSE,
         sizeof(InstanceData),
-        (void *) offsetof(InstanceData, region)
+        reinterpret_cast<void *>(offsetof(InstanceData, region))
     );
     glVertexAttribDivisor(8, 1);
 
@@ -106,7 +104,7 @@ bool SpriteBatch::create_instance_buffer() {
     glVertexAttribPointer(
         9, 1, GL_FLOAT, GL_FALSE,
         sizeof(InstanceData),
-        (void*)offsetof(InstanceData, texIndex)
+        reinterpret_cast<void *>(offsetof(InstanceData, texIndex))
     );
     glVertexAttribDivisor(9, 1);
 
@@ -127,17 +125,16 @@ bool SpriteBatch::create_index_buffer() {
     return pipeline.ebo != 0;
 }
 
-bool SpriteBatch::create_default_shader() const {
+bool SpriteBatch::create_default_shader()  {
     auto shader = std::make_unique<Shader>(
         SourcePath(RESOURCE_PATH"/default_shader.vert", RESOURCE_PATH"/default_shader.frag"));
 
     if (!shader->get_program()) {
         std::cout << "Failed to create shader" << std::endl;
-        pipeline.material->set_shader(nullptr);
         return false;
     }
 
-    pipeline.material->set_shader(std::move(shader));
+    pipeline.shader = std::move(shader);
     return true;
 }
 
@@ -153,6 +150,16 @@ void SpriteBatch::draw_texture(Texture2D *texture, Vector2 position, Vector2 sca
         flush();
     }
 
+    auto it = std::find(pipeline.texture_slots.begin(), pipeline.texture_slots.end(), texture);
+
+
+    if (it == pipeline.texture_slots.end() && pipeline.texture_slots.size() >= pipeline.MAX_TEXTURE_SLOTS) {
+        flush();
+        pipeline.texture_slots.clear();
+    }
+
+    it = std::find(pipeline.texture_slots.begin(), pipeline.texture_slots.end(), texture);
+
     float srcW = (sourceRect.width > 0) ? sourceRect.width : (float)texture->get_width();
     float srcH = (sourceRect.height > 0) ? sourceRect.height : (float)texture->get_height();
 
@@ -161,22 +168,13 @@ void SpriteBatch::draw_texture(Texture2D *texture, Vector2 position, Vector2 sca
 
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(position.x, position.y, 0.0f));
-
-    model = glm::translate(model, glm::vec3(pivotX * srcW * scale.x,
-                                            pivotY * srcH * scale.y,
-                                            0.0f));
-
+    model = glm::translate(model, glm::vec3(pivotX * srcW * scale.x, pivotY * srcH * scale.y, 0.0f));
     model = glm::rotate(model, glm::radians(rotation), glm::vec3(0, 0, 1));
-
-    model = glm::scale(model, glm::vec3(scale.x * srcW,
-                                        scale.y * srcH,
-                                        1.0f));
-
+    model = glm::scale(model, glm::vec3(scale.x * srcW, scale.y * srcH, 1.0f));
     model = glm::translate(model, glm::vec3(-pivotX, -pivotY, 0.0f));
 
     InstanceData instance;
     instance.mvp = pipeline.projection * model;
-
     instance.color[0] = color.r;
     instance.color[1] = color.g;
     instance.color[2] = color.b;
@@ -190,13 +188,17 @@ void SpriteBatch::draw_texture(Texture2D *texture, Vector2 position, Vector2 sca
     instance.region.z = srcW / tex_w;
     instance.region.w = srcH / tex_h;
 
-    if (pipeline.material->get_texture() != texture && pipeline.material->get_texture() != nullptr) {
-        flush();
+
+    if (it != pipeline.texture_slots.end()) {
+        instance.texIndex = it - pipeline.texture_slots.begin();
+    } else {
+        pipeline.texture_slots.push_back(texture);
+        instance.texIndex = pipeline.texture_slots.size() - 1;
     }
 
-    pipeline.material->set_texture(texture);
     pipeline.instances.push_back(instance);
 }
+
 
 
 void SpriteBatch::flush() const {
@@ -206,18 +208,16 @@ void SpriteBatch::flush() const {
 void SpriteBatch::end() const {
     if (pipeline.instances.empty()) return;
 
-
     glBindBuffer(GL_ARRAY_BUFFER, pipeline.instance_vbo);
-    glBufferData(GL_ARRAY_BUFFER, pipeline.MAX_INSTANCES * sizeof(InstanceData), nullptr, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, pipeline.MAX_INSTANCES * sizeof(InstanceData), nullptr, GL_STREAM_DRAW);
     glBufferSubData(GL_ARRAY_BUFFER, 0, pipeline.instances.size() * sizeof(InstanceData), pipeline.instances.data());
-
 
     for (int i = 0; i < pipeline.texture_slots.size(); i++) {
         glActiveTexture(GL_TEXTURE0 + i);
         glBindTexture(GL_TEXTURE_2D, pipeline.texture_slots[i]->get_texture());
     }
 
-    pipeline.material->use();
+    pipeline.shader->use();
 
 
     glDrawElementsInstanced(

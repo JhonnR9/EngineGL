@@ -31,10 +31,10 @@ class SpriteBatch {
         GLuint ebo{0};
         GLuint instance_vbo{0};
         glm::mat4 projection{1.0f};
-        std::unique_ptr<Material> material{nullptr};
+        std::unique_ptr<Shader> shader{nullptr};
         unsigned int MAX_INSTANCES{4096};
         std::vector<InstanceData> instances;
-        static constexpr int MAX_TEXTURE_SLOTS = 8;
+        static constexpr int MAX_TEXTURE_SLOTS = 16;
         std::vector<Texture2D*> texture_slots;
     };
 
@@ -57,7 +57,7 @@ private:
     bool create_vertex_buffer();
     bool create_instance_buffer();
     bool create_index_buffer();
-    bool create_default_shader() const;
+    bool create_default_shader();
 
 
     std::vector<InstanceData> drawCalls;
