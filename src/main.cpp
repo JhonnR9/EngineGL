@@ -5,28 +5,35 @@
 #include <ctime>
 #include "app.h"
 #include "vector2.h"
-#include "graphics/renderer.h"
+#include "graphics/SpriteBatch.h"
 #include "graphics/texture_2d.h"
 
 int main() {
     App &app = App::getInstance();
     app.init();
     glfwSwapInterval(0);
-    Renderer renderer(app.get_windowed_width(), app.get_windowed_height());
+    SpriteBatch batch(app.get_windowed_width(), app.get_windowed_height());
 
-    Texture2D texture1(RESOURCE_PATH"/texture.jpg");
-
+    Texture2D texture1(RESOURCE_PATH"/hutao.png");
 
     const int num_draws = 1000;
-    unsigned int seed = static_cast<unsigned int>(time(NULL));
+    const unsigned int seed = static_cast<unsigned int>(time(nullptr));
+    float lastTime = glfwGetTime();
 
     while (!glfwWindowShouldClose(app.get_window())) {
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
+        float currentTime = glfwGetTime();
+        float deltaTime = currentTime - lastTime;
+        lastTime = currentTime;
 
-        renderer.begin();
+        batch.begin();
 
         srand(seed);
+
+        float rotation = currentTime * (0.5f + static_cast<float>(rand()) / RAND_MAX);
+
+
 
         for (int i = 0; i < num_draws; ++i) {
 
@@ -40,17 +47,18 @@ int main() {
             c.b = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
             c.a = 1.0f;
 
-            renderer.draw_texture(
+            batch.draw_texture(
                 &texture1,
                 Vector2(x, y),
-                Vector2(0.25f, 0.25f),
-                0.0f,
+                Vector2(.25, .25f),
+                rotation,
                 Vector2(texture1.get_width() / 2.f, texture1.get_height() / 2.f),
-                c
+                c,
+                Rect()
             );
         }
 
-        renderer.end();
+        batch.end();
 
         glfwSwapBuffers(app.get_window());
         glfwPollEvents();

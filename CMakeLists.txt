@@ -30,7 +30,7 @@ add_executable(EngineGL
         src/graphics/shader.cpp
         src/graphics/texture_2d.cpp
         src/graphics/material.cpp
-        src/graphics/renderer.cpp
+        src/graphics/SpriteBatch.cpp
         src/sprite.cpp
         src/sprite.h
 )

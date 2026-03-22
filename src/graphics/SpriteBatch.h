@@ -12,23 +12,26 @@ struct Color {
     float r, g, b, a;
 };
 
-
-
-struct InstanceData {
-    glm::mat4 mvp;
-    glm::vec4 color;
+struct Rect {
+    float x{0}, y{0}, width{0}, height{0};
 };
+
 class Vector2;
-class Renderer {
+class SpriteBatch {
+    struct InstanceData {
+        glm::mat4 mvp;
+        glm::vec4 color;
+        glm::vec4 region;
+    };
+
     struct Pipeline {
         GLuint vao{0};
         GLuint vbo{0};
         GLuint ebo{0};
-        GLuint color_vbo{0};
-        GLuint mvp_vbo{0};
+        GLuint instance_vbo{0};
         glm::mat4 projection{1.0f};
         std::unique_ptr<Material> material{nullptr};
-        unsigned int MAX_INSTANCES{1024};
+        unsigned int MAX_INSTANCES{8192};
         std::vector<InstanceData> instances;
         Texture2D* current_texture{nullptr};
     };
@@ -36,29 +39,21 @@ class Renderer {
 
     Pipeline pipeline;
 public:
-    Renderer(float screenWidth, float screenHeight);
-
-    ~Renderer();
-
+    SpriteBatch(float screenWidth, float screenHeight);
+    ~SpriteBatch();
     void begin();
 
     void draw_texture(Texture2D *texture, Vector2 position, Vector2 scale,
-                      float rotation, Vector2 origin, Color color);
+                               float rotation, Vector2 origin, Color color, Rect sourceRect);
     void flush();
-    void end();
+    void end() const;
 
 private:
     void setup_buffers();
-
     bool create_vertex_array_object();
-
     bool create_vertex_buffer();
-
-    bool create_color_vertex_instance_buffer();
-    bool create_mpv_vertex_instance_buffer();
-
+    bool create_instance_buffer();
     bool create_index_buffer();
-
     bool create_default_shader() const;
 
 
