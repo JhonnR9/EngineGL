@@ -6,9 +6,9 @@
 #define MY_SCENE_H
 #include <memory>
 
-#include "scene.h"
-#include "graphics/sprite_batch.h"
-#include "graphics/texture_2d.h"
+#include "../systems/scene.h"
+#include "../graphics/sprite_batch.h"
+#include "../graphics/texture_2d.h"
 
 
 class MyScene final : public Scene{

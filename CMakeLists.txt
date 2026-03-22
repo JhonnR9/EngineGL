@@ -25,21 +25,18 @@ FetchContent_MakeAvailable(glfw)
 
 
 add_executable(EngineGL
-        src/main.cpp
-        src/app.cpp
+        src/main/main.cpp
+        src/main/app.cpp
         src/graphics/shader.cpp
         src/graphics/texture_2d.cpp
-        src/graphics/material.cpp
         src/graphics/sprite_batch.cpp
-        src/sprite.cpp
-        src/sprite.h
-        src/scene.cpp
-        src/scene.h
-        src/my_scene.cpp
-        src/my_scene.h
+        src/scenes/scene.cpp
+        src/scenes/my_scene.cpp
+        src/systems/system.h
 )
 
 target_include_directories(EngineGL PRIVATE "src/vendor")
+target_compile_options(EngineGL PRIVATE -Wno-unused-value)
 
 add_library(glad STATIC src/vendor/glad/glad.c)
 target_include_directories(glad PUBLIC src/vendor/glad)

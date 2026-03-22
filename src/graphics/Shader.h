@@ -28,7 +28,7 @@ class Shader {
 public:
     explicit Shader(const SourcePath &source_path);
 
-    void Shader::set_mat4(const std::string& name, const glm::mat4& mat) const {
+    void set_mat4(const std::string& name, const glm::mat4& mat) const {
         glUniformMatrix4fv(glGetUniformLocation(program, name.c_str()), 1, GL_FALSE, &mat[0][0]);
     }
 

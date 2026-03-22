@@ -5,8 +5,8 @@
 #include "my_scene.h"
 
 #include <ctime>
-#include "vector2.h"
-#include "app.h"
+#include "../utils/vector2.h"
+#include "../main/app.h"
 #include "glm/ext/matrix_clip_space.hpp"
 
 MyScene::MyScene(App &app): Scene(app) {
@@ -14,7 +14,7 @@ MyScene::MyScene(App &app): Scene(app) {
 
 void MyScene::init() {
     batch = std::make_unique<SpriteBatch>(app.get_windowed_width(), app.get_windowed_height());
-    auto a = Vector2(0.25f, 0.25f);
+    auto a = Vector2(1.f, 1.f);
     texture1 = std::make_unique<Texture2D>(RESOURCE_PATH"/yuzuha.jpg", a);
 
     seed = static_cast<unsigned int>(time(nullptr));
@@ -36,29 +36,20 @@ void MyScene::render() {
 
     batch->begin();
 
-    for (int i = 0; i < num_draws; ++i) {
-        int w =app.VIRTUAL_WIDTH;
-        int h =app.VIRTUAL_HEIGHT;
-        float x = static_cast<float>(rand() % w);
-        float y = static_cast<float>(rand() % h);
+    Color color;
+    color.r = 1.0f;
+    color.g = 1.0f;
+    color.b = 1.0f;
+    color.a = 1.0f;
 
-        Color c;
-        c.r = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
-        c.g = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
-        c.b = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
-        c.a = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
-
-        batch->draw_texture(
-            texture1.get(),
-            Vector2(x, y),
-            Vector2(1.f, 1.f),
-            rotation,
-            Vector2(texture1->get_width() / 2.f, texture1->get_height() / 2.f),
-            c,
-            Rect()
-        );
-    }
-
+    batch->draw_texture(
+        texture1.get(),
+        Vector2(1366/2, 768/2),
+        Vector2(1.f, 1.f),
+        rotation,
+        Vector2(texture1->get_width() / 2.f, texture1->get_height() / 2.f),
+        color,
+        Rect());
 
     batch->end();
 }

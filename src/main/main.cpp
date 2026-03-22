@@ -1,6 +1,6 @@
 
 #include "app.h"
-#include "my_scene.h"
+#include "scenes/my_scene.h"
 
 int main() {
     App &app = App::getInstance();

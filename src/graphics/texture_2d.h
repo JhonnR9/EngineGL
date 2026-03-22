@@ -4,7 +4,7 @@
 
 #ifndef TEXTURE_H
 #define TEXTURE_H
-#include "vector2.h"
+#include "utils/vector2.h"
 #include "glad/glad.h"
 
 class Texture2D {

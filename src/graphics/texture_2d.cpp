@@ -56,18 +56,18 @@ Texture2D::Texture2D(const char *path, Vector2 &apply_scale) {
         return;
     }
 
-    // Calcula nova dimensão aplicando a escala
+
     width = static_cast<int>(original_width * apply_scale.x);
     height = static_cast<int>(original_height * apply_scale.y);
 
-    // Aloca buffer para imagem redimensionada
+
     uint8_t* resized_data = new uint8_t[width * height * 4];
 
-    // Redimensiona
+
     stbir_resize_uint8(data, original_width, original_height, 0,
                        resized_data, width, height, 0, 4);
 
-    // Cria a textura
+
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
 
@@ -79,7 +79,7 @@ Texture2D::Texture2D(const char *path, Vector2 &apply_scale) {
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, resized_data);
     glGenerateMipmap(GL_TEXTURE_2D);
 
-    // Libera memória
+
     delete[] resized_data;
     stbi_image_free(data);
 }

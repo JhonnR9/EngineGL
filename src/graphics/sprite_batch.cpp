@@ -2,7 +2,7 @@
 
 #include <iostream>
 #include <glm/gtc/matrix_transform.hpp>
-#include  "vector2.h"
+#include "utils/vector2.h"
 
 SpriteBatch::SpriteBatch(float screenWidth, float screenHeight) {
     pipeline.projection = glm::ortho(0.0f, screenWidth, screenHeight, 0.0f, -1.0f, 1.0f);

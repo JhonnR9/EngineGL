@@ -5,16 +5,10 @@
 #include <glm/glm.hpp>
 #include <vector>
 #include <memory>
+
+#include "shader.h"
 #include "graphics/texture_2d.h"
-#include "graphics/material.h"
-
-struct Color {
-    float r, g, b, a;
-};
-
-struct Rect {
-    float x{0}, y{0}, width{0}, height{0};
-};
+#include "components/components.h"
 
 class Vector2;
 class SpriteBatch {
