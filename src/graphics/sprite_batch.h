@@ -19,10 +19,13 @@ struct Rect {
 class Vector2;
 class SpriteBatch {
     struct InstanceData {
-        glm::mat4 mvp;
+        glm::vec2 position;
+        glm::vec2 origin;
+        float rotation;
+        glm::vec2 scale;
         glm::vec4 color;
         glm::vec4 region;
-        float texIndex;
+        float tex_index;
     };
 
     struct Pipeline {

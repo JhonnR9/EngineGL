@@ -15,19 +15,17 @@ MyScene::MyScene(App &app): Scene(app) {
 void MyScene::init() {
     batch = std::make_unique<SpriteBatch>(app.get_windowed_width(), app.get_windowed_height());
     auto a = Vector2(0.25f, 0.25f);
-    texture1 = std::make_unique<Texture2D>(RESOURCE_PATH"/yuzuha.jpg" ,a);
+    texture1 = std::make_unique<Texture2D>(RESOURCE_PATH"/yuzuha.jpg", a);
 
     seed = static_cast<unsigned int>(time(nullptr));
     auto projection = glm::ortho(0.0f, app.VIRTUAL_WIDTH, app.VIRTUAL_HEIGHT, 0.0f, -1.0f, 1.0f);
-    batch->set_projection(projection) ;
+    batch->set_projection(projection);
 }
 
-void MyScene::update(float delta){
-
+void MyScene::update(float delta) {
 }
 
 void MyScene::render() {
-
     float currentTime = glfwGetTime();
     float rotation = currentTime * (0.5f + static_cast<float>(rand()) / RAND_MAX) * 20;
 
@@ -39,14 +37,16 @@ void MyScene::render() {
     batch->begin();
 
     for (int i = 0; i < num_draws; ++i) {
-        float x = static_cast<float>(rand() % app.get_windowed_width());
-        float y = static_cast<float>(rand() % app.get_windowed_height());
+        int w =app.VIRTUAL_WIDTH;
+        int h =app.VIRTUAL_HEIGHT;
+        float x = static_cast<float>(rand() % w);
+        float y = static_cast<float>(rand() % h);
 
         Color c;
         c.r = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
         c.g = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
         c.b = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
-        c.a =static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+        c.a = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
 
         batch->draw_texture(
             texture1.get(),
@@ -57,13 +57,10 @@ void MyScene::render() {
             c,
             Rect()
         );
-
     }
 
 
-
     batch->end();
-
 }
 
 void MyScene::resize(int width, int height) {

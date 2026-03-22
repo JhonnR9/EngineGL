@@ -2,7 +2,7 @@
 // Created by jhone on 09/08/2025.
 //
 
-#include "Shader.h"
+#include "shader.h"
 #include <fstream>
 #include <iostream>
 

@@ -5,7 +5,6 @@
 #ifndef MATERIAL_H
 #define MATERIAL_H
 #include <memory>
-
 #include "shader.h"
 
 class Texture2D;

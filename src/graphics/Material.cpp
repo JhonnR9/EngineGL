@@ -2,7 +2,7 @@
 // Created by jhone on 09/08/2025.
 //
 
-#include "Material.h"
+#include "material.h"
 #include "texture_2d.h"
 
 GLint Material::get_uniform_location(const char *name) const {

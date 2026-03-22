@@ -7,6 +7,7 @@
 
 #include <string>
 #include "glad/glad.h"
+#include "glm/mat4x4.hpp"
 
 struct SourcePath {
     const char *vertex;
@@ -26,6 +27,11 @@ class Shader {
 
 public:
     explicit Shader(const SourcePath &source_path);
+
+    void Shader::set_mat4(const std::string& name, const glm::mat4& mat) const {
+        glUniformMatrix4fv(glGetUniformLocation(program, name.c_str()), 1, GL_FALSE, &mat[0][0]);
+    }
+
 
     Shader(const char *vertex_shader_src, const char *fragment_shader_src);
     void set_int(const std::string& name, int value) const;

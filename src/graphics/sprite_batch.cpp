@@ -61,52 +61,41 @@ bool SpriteBatch::create_instance_buffer() {
         GL_DYNAMIC_DRAW
     );
 
-    std::size_t offset = 0;
+    // aTranslation (vec2)
+    glEnableVertexAttribArray(3);
+    glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(InstanceData), (void*)offsetof(InstanceData, position));
+    glVertexAttribDivisor(3, 1);
 
-    for (int i = 0; i < 4; i++) {
-        glEnableVertexAttribArray(3 + i);
-        glVertexAttribPointer(
-            3 + i,
-            4,
-            GL_FLOAT,
-            GL_FALSE,
-            sizeof(InstanceData),
-            reinterpret_cast<void *>(offset)
-        );
-        glVertexAttribDivisor(3 + i, 1);
+    // aOrigin (vec2)
+    glEnableVertexAttribArray(4);
+    glVertexAttribPointer(4, 2, GL_FLOAT, GL_FALSE, sizeof(InstanceData), (void*)offsetof(InstanceData, origin));
+    glVertexAttribDivisor(4, 1);
 
-        offset += sizeof(glm::vec4);
-    }
+    // aRotation (float)
+    glEnableVertexAttribArray(5);
+    glVertexAttribPointer(5, 1, GL_FLOAT, GL_FALSE, sizeof(InstanceData), (void*)offsetof(InstanceData, rotation));
+    glVertexAttribDivisor(5, 1);
 
+    // aScale (vec2)
+    glEnableVertexAttribArray(6);
+    glVertexAttribPointer(6, 2, GL_FLOAT, GL_FALSE, sizeof(InstanceData), (void*)offsetof(InstanceData, scale));
+    glVertexAttribDivisor(6, 1);
+
+    // aInstanceColor (vec4)
     glEnableVertexAttribArray(7);
-    glVertexAttribPointer(
-        7,
-        4,
-        GL_FLOAT,
-        GL_FALSE,
-        sizeof(InstanceData),
-        reinterpret_cast<void *>(offsetof(InstanceData, color))
-    );
+    glVertexAttribPointer(7, 4, GL_FLOAT, GL_FALSE, sizeof(InstanceData), (void*)offsetof(InstanceData, color));
     glVertexAttribDivisor(7, 1);
 
+    // aRegion (vec4)
     glEnableVertexAttribArray(8);
-    glVertexAttribPointer(
-        8,
-        4,
-        GL_FLOAT,
-        GL_FALSE,
-        sizeof(InstanceData),
-        reinterpret_cast<void *>(offsetof(InstanceData, region))
-    );
+    glVertexAttribPointer(8, 4, GL_FLOAT, GL_FALSE, sizeof(InstanceData), (void*)offsetof(InstanceData, region));
     glVertexAttribDivisor(8, 1);
 
+    // aTexIndex (float)
     glEnableVertexAttribArray(9);
-    glVertexAttribPointer(
-        9, 1, GL_FLOAT, GL_FALSE,
-        sizeof(InstanceData),
-        reinterpret_cast<void *>(offsetof(InstanceData, texIndex))
-    );
+    glVertexAttribPointer(9, 1, GL_FLOAT, GL_FALSE, sizeof(InstanceData), (void*)offsetof(InstanceData, tex_index));
     glVertexAttribDivisor(9, 1);
+
 
     return pipeline.instance_vbo != 0;
 }
@@ -166,15 +155,13 @@ void SpriteBatch::draw_texture(Texture2D *texture, Vector2 position, Vector2 sca
     float pivotX = (origin.x / srcW) - 0.5f;
     float pivotY = (origin.y / srcH) - 0.5f;
 
-    glm::mat4 model = glm::mat4(1.0f);
-    model = glm::translate(model, glm::vec3(position.x, position.y, 0.0f));
-    model = glm::translate(model, glm::vec3(pivotX * srcW * scale.x, pivotY * srcH * scale.y, 0.0f));
-    model = glm::rotate(model, glm::radians(rotation), glm::vec3(0, 0, 1));
-    model = glm::scale(model, glm::vec3(scale.x * srcW, scale.y * srcH, 1.0f));
-    model = glm::translate(model, glm::vec3(-pivotX, -pivotY, 0.0f));
 
     InstanceData instance;
-    instance.mvp = pipeline.projection * model;
+    instance.position = glm::vec2(position.x, position.y);
+    instance.origin = glm::vec2(pivotX, pivotY);
+    instance.scale = glm::vec2(srcW, srcH);
+    instance.rotation = rotation;
+
     instance.color[0] = color.r;
     instance.color[1] = color.g;
     instance.color[2] = color.b;
@@ -190,10 +177,10 @@ void SpriteBatch::draw_texture(Texture2D *texture, Vector2 position, Vector2 sca
 
 
     if (it != pipeline.texture_slots.end()) {
-        instance.texIndex = it - pipeline.texture_slots.begin();
+        instance.tex_index = it - pipeline.texture_slots.begin();
     } else {
         pipeline.texture_slots.push_back(texture);
-        instance.texIndex = pipeline.texture_slots.size() - 1;
+        instance.tex_index = pipeline.texture_slots.size() - 1;
     }
 
     pipeline.instances.push_back(instance);
@@ -208,6 +195,9 @@ void SpriteBatch::flush() const {
 void SpriteBatch::end() const {
     if (pipeline.instances.empty()) return;
 
+    pipeline.shader->use();
+    pipeline.shader->set_mat4("uProjection", pipeline.projection);
+
     glBindBuffer(GL_ARRAY_BUFFER, pipeline.instance_vbo);
     glBufferData(GL_ARRAY_BUFFER, pipeline.MAX_INSTANCES * sizeof(InstanceData), nullptr, GL_STREAM_DRAW);
     glBufferSubData(GL_ARRAY_BUFFER, 0, pipeline.instances.size() * sizeof(InstanceData), pipeline.instances.data());
@@ -216,9 +206,6 @@ void SpriteBatch::end() const {
         glActiveTexture(GL_TEXTURE0 + i);
         glBindTexture(GL_TEXTURE_2D, pipeline.texture_slots[i]->get_texture());
     }
-
-    pipeline.shader->use();
-
 
     glDrawElementsInstanced(
         GL_TRIANGLES,
