@@ -13,12 +13,12 @@ void Material::set_shader(std::unique_ptr<Shader> shader) {
     this->shader = std::move(shader);
 }
 
-void Material::set_texture(std::unique_ptr<Texture2D> texture) {
-    this->texture = std::move(texture);
+void Material::set_texture(Texture2D* texture) {
+    this->texture = texture;
 }
 
-Texture2D & Material::get_texture() const {
-    return *this->texture;
+Texture2D * Material::get_texture() const {
+    return this->texture;
 }
 
 void Material::use() const {

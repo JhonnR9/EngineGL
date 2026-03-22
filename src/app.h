@@ -12,6 +12,17 @@ class App {
     bool is_fullscreen = false;
     int windowed_xpos = 100, windowed_ypos = 100;
     int windowed_width = 1366, windowed_height = 768;
+
+public:
+ int get_windowed_width() const {
+        return windowed_width;
+    }
+
+    int get_windowed_height() const {
+        return windowed_height;
+    }
+
+private:
     glm::vec2 camera_position = {glm::vec2(0.f)};
 
     App() = default;
