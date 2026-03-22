@@ -1,4 +1,4 @@
-#include "graphics/SpriteBatch.h"
+#include "sprite_batch.h"
 
 #include <iostream>
 #include <glm/gtc/matrix_transform.hpp>
@@ -199,16 +199,18 @@ void SpriteBatch::draw_texture(Texture2D *texture, Vector2 position, Vector2 sca
 }
 
 
-void SpriteBatch::flush() {
+void SpriteBatch::flush() const {
     end();
-    pipeline.instances.clear();
 }
 
 void SpriteBatch::end() const {
     if (pipeline.instances.empty()) return;
 
+
     glBindBuffer(GL_ARRAY_BUFFER, pipeline.instance_vbo);
+    glBufferData(GL_ARRAY_BUFFER, pipeline.MAX_INSTANCES * sizeof(InstanceData), nullptr, GL_DYNAMIC_DRAW);
     glBufferSubData(GL_ARRAY_BUFFER, 0, pipeline.instances.size() * sizeof(InstanceData), pipeline.instances.data());
+
 
     for (int i = 0; i < pipeline.texture_slots.size(); i++) {
         glActiveTexture(GL_TEXTURE0 + i);
@@ -225,6 +227,11 @@ void SpriteBatch::end() const {
         nullptr,
         pipeline.instances.size()
     );
+}
+
+void SpriteBatch::set_projection(const glm::mat<4,4,float> &projection) {
+    pipeline.projection = projection;
+
 }
 
 SpriteBatch::~SpriteBatch() {

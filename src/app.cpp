@@ -12,14 +12,43 @@
 #include <GLFW/glfw3.h>
 #include <glm/vec3.hpp>
 
+App::~App() {
+    glfwDestroyWindow(window);
+    glfwTerminate();
+}
+
 void App::key_callback_redirect(GLFWwindow *win, const int key, int scancode, const int action, int mods) {
     getInstance().key_callback(win, key, scancode, action, mods);
 }
 
 
-
 void App::error_callback(const int error, const char *description) {
     std::cerr << "Error: "<< error << description << std::endl;
+}
+
+void App::framebuffer_size_callback_redirect(GLFWwindow *window, int width, int height) {
+    App& app = App::getInstance();
+
+    float targetAspectRatio = app.VIRTUAL_WIDTH / app.VIRTUAL_HEIGHT;
+
+    int viewWidth = width;
+    int viewHeight = (int)(viewWidth / targetAspectRatio + 0.5f);
+
+    if (viewHeight > height) {
+        viewHeight = height;
+        viewWidth = (int)(viewHeight * targetAspectRatio + 0.5f);
+    }
+
+
+    int viewX = (width / 2) - (viewWidth / 2);
+    int viewY = (height / 2) - (viewHeight / 2);
+
+    glViewport(viewX, viewY, viewWidth, viewHeight);
+
+    if (app.current_scene) {
+
+        app.current_scene->resize(app.VIRTUAL_WIDTH, app.VIRTUAL_HEIGHT);
+    }
 }
 
 void App::init() {
@@ -44,29 +73,37 @@ void App::init() {
 
     glfwMakeContextCurrent(window);
     glfwSetKeyCallback(window, key_callback_redirect);
+    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback_redirect);
 
     if (!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress))) {
         std::cerr << "Failed to initialize GLAD" << std::endl;
     }
 
-    glfwSwapInterval(1);
+    glfwSwapInterval(0);
+
 
 }
 
-void App::loop() {
+void App::game_loop() {
 
+    float lastTime = glfwGetTime();
+    while (!glfwWindowShouldClose(window)) {
+        float currentTime = glfwGetTime();
+        float deltaTime = currentTime - lastTime;
+        lastTime = currentTime;
+
+        if (current_scene) {
+            current_scene->update(deltaTime);
+            current_scene->render();
+        }
+
+
+        glfwSwapBuffers(window);
+        glfwPollEvents();
+    }
 }
 
 void App::key_callback(GLFWwindow *win, const int key, int scancode, const int action, int mods) {
-    if (key == GLFW_KEY_LEFT && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
-        camera_position.x += 0.01f;
-    }else if (key == GLFW_KEY_RIGHT && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
-        camera_position.x -= 0.01f;
-    }else if (key == GLFW_KEY_DOWN && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
-        camera_position.y += 0.01f;
-    }else if (key == GLFW_KEY_UP && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
-        camera_position.y -= 0.01f;
-    }
 
     if ((key == GLFW_KEY_F11 || key==GLFW_KEY_ESCAPE) && action == GLFW_PRESS) {
 

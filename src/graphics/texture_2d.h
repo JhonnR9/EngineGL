@@ -4,6 +4,7 @@
 
 #ifndef TEXTURE_H
 #define TEXTURE_H
+#include "vector2.h"
 #include "glad/glad.h"
 
 class Texture2D {
@@ -14,6 +15,8 @@ class Texture2D {
 
 public:
     explicit Texture2D(const char *path);
+
+    explicit Texture2D(const char *path, Vector2 &apply_scale);
 
     ~Texture2D();
 

@@ -30,9 +30,13 @@ add_executable(EngineGL
         src/graphics/shader.cpp
         src/graphics/texture_2d.cpp
         src/graphics/material.cpp
-        src/graphics/SpriteBatch.cpp
+        src/graphics/sprite_batch.cpp
         src/sprite.cpp
         src/sprite.h
+        src/scene.cpp
+        src/scene.h
+        src/my_scene.cpp
+        src/my_scene.h
 )
 
 target_include_directories(EngineGL PRIVATE "src/vendor")

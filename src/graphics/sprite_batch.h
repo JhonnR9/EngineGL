@@ -32,9 +32,9 @@ class SpriteBatch {
         GLuint instance_vbo{0};
         glm::mat4 projection{1.0f};
         std::unique_ptr<Material> material{nullptr};
-        unsigned int MAX_INSTANCES{8192};
+        unsigned int MAX_INSTANCES{4096};
         std::vector<InstanceData> instances;
-        static constexpr int MAX_TEXTURE_SLOTS = 16;
+        static constexpr int MAX_TEXTURE_SLOTS = 8;
         std::vector<Texture2D*> texture_slots;
     };
 
@@ -47,8 +47,9 @@ public:
 
     void draw_texture(Texture2D *texture, Vector2 position, Vector2 scale,
                                float rotation, Vector2 origin, Color color, Rect sourceRect);
-    void flush();
+    void flush() const;
     void end() const;
+    void set_projection(const glm::mat<4,4,float> &projection);
 
 private:
     void setup_buffers();
