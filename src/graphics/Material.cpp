@@ -21,6 +21,10 @@ Texture2D * Material::get_texture() const {
     return this->texture;
 }
 
+Shader * Material::get_shader() const {
+    return shader.get();
+}
+
 void Material::use() const {
     shader->use();
     texture->use();

@@ -15,8 +15,10 @@ int main() {
     SpriteBatch batch(app.get_windowed_width(), app.get_windowed_height());
 
     Texture2D texture1(RESOURCE_PATH"/hutao.png");
+    Texture2D texture2(RESOURCE_PATH"/texture.jpg");
 
-    const int num_draws = 1000;
+
+    const int num_draws = 500;
     const unsigned int seed = static_cast<unsigned int>(time(nullptr));
     float lastTime = glfwGetTime();
 
@@ -34,9 +36,8 @@ int main() {
         float rotation = currentTime * (0.5f + static_cast<float>(rand()) / RAND_MAX);
 
 
-
         for (int i = 0; i < num_draws; ++i) {
-
+            Texture2D* textureToUse = &texture1;
 
             float x = static_cast<float>(rand() % app.get_windowed_width());
             float y = static_cast<float>(rand() % app.get_windowed_height());
@@ -48,11 +49,11 @@ int main() {
             c.a = 1.0f;
 
             batch.draw_texture(
-                &texture1,
+                textureToUse,
                 Vector2(x, y),
-                Vector2(.25, .25f),
+                Vector2(1.0f, 1.0f),
                 rotation,
-                Vector2(texture1.get_width() / 2.f, texture1.get_height() / 2.f),
+                Vector2(textureToUse->get_width() / 2.f, textureToUse->get_height() / 2.f),
                 c,
                 Rect()
             );

@@ -22,6 +22,7 @@ class SpriteBatch {
         glm::mat4 mvp;
         glm::vec4 color;
         glm::vec4 region;
+        float texIndex;
     };
 
     struct Pipeline {
@@ -33,7 +34,8 @@ class SpriteBatch {
         std::unique_ptr<Material> material{nullptr};
         unsigned int MAX_INSTANCES{8192};
         std::vector<InstanceData> instances;
-        Texture2D* current_texture{nullptr};
+        static constexpr int MAX_TEXTURE_SLOTS = 16;
+        std::vector<Texture2D*> texture_slots;
     };
 
 

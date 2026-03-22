@@ -16,6 +16,8 @@ void App::key_callback_redirect(GLFWwindow *win, const int key, int scancode, co
     getInstance().key_callback(win, key, scancode, action, mods);
 }
 
+
+
 void App::error_callback(const int error, const char *description) {
     std::cerr << "Error: "<< error << description << std::endl;
 }

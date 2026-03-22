@@ -28,6 +28,8 @@ public:
     explicit Shader(const SourcePath &source_path);
 
     Shader(const char *vertex_shader_src, const char *fragment_shader_src);
+    void set_int(const std::string& name, int value) const;
+    void set_int_array(const std::string& name, int* values, uint32_t count) const;
 
     ~Shader();
 

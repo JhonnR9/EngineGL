@@ -54,6 +54,17 @@ void Shader::create_shader(const char *vertex_src, const char *fragment_src) {
         std::cerr << "Shader program link error: " << log << std::endl;
     }
 
+    glUseProgram(program);
+    int samplers[16];
+    for (int i = 0; i < 16; i++) {
+        samplers[i] = i;
+    }
+
+    GLint loc = glGetUniformLocation(program, "u_Textures");
+    if (loc != -1) {
+        glUniform1iv(loc, 16, samplers);
+    }
+
     glDeleteShader(vertex_shader);
     glDeleteShader(fragment_shader);
 
@@ -86,4 +97,12 @@ GLuint Shader::get_program() const {
 
 void Shader::use() const {
     glUseProgram(program);
+}
+
+void Shader::set_int(const std::string& name, int value) const {
+    glUniform1i(glGetUniformLocation(program, name.c_str()), value);
+}
+
+void Shader::set_int_array(const std::string& name, int* values, uint32_t count) const {
+    glUniform1iv(glGetUniformLocation(program, name.c_str()), count, values);
 }

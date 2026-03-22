@@ -21,6 +21,7 @@ public:
     void set_shader(std::unique_ptr<Shader> shader);
     void set_texture(Texture2D* texture);
     Texture2D* get_texture() const;
+    Shader* get_shader() const;
 
     void use() const;
 };

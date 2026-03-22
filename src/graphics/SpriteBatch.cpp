@@ -102,6 +102,14 @@ bool SpriteBatch::create_instance_buffer() {
     );
     glVertexAttribDivisor(8, 1);
 
+    glEnableVertexAttribArray(9);
+    glVertexAttribPointer(
+        9, 1, GL_FLOAT, GL_FALSE,
+        sizeof(InstanceData),
+        (void*)offsetof(InstanceData, texIndex)
+    );
+    glVertexAttribDivisor(9, 1);
+
     return pipeline.instance_vbo != 0;
 }
 
@@ -136,6 +144,7 @@ bool SpriteBatch::create_default_shader() const {
 void SpriteBatch::begin() {
     glBindVertexArray(pipeline.vao);
     pipeline.instances.clear();
+    pipeline.texture_slots.clear();
 }
 void SpriteBatch::draw_texture(Texture2D *texture, Vector2 position, Vector2 scale,
                                float rotation, Vector2 origin, Color color, Rect sourceRect) {
@@ -173,13 +182,13 @@ void SpriteBatch::draw_texture(Texture2D *texture, Vector2 position, Vector2 sca
     instance.color[2] = color.b;
     instance.color[3] = color.a;
 
-    float texW = (float)texture->get_width();
-    float texH = (float)texture->get_height();
+    float tex_w = (float)texture->get_width();
+    float tex_h = (float)texture->get_height();
 
-    instance.region.x = sourceRect.x / texW;
-    instance.region.y = sourceRect.y / texH;
-    instance.region.z = srcW / texW;
-    instance.region.w = srcH / texH;
+    instance.region.x = sourceRect.x / tex_w;
+    instance.region.y = sourceRect.y / tex_h;
+    instance.region.z = srcW / tex_w;
+    instance.region.w = srcH / tex_h;
 
     if (pipeline.material->get_texture() != texture && pipeline.material->get_texture() != nullptr) {
         flush();
@@ -196,21 +205,18 @@ void SpriteBatch::flush() {
 }
 
 void SpriteBatch::end() const {
-    if (pipeline.instances.empty()) {
-        return;
-    }
+    if (pipeline.instances.empty()) return;
 
     glBindBuffer(GL_ARRAY_BUFFER, pipeline.instance_vbo);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, pipeline.instances.size() * sizeof(InstanceData), pipeline.instances.data());
 
-    glBufferSubData(
-        GL_ARRAY_BUFFER,
-        0,
-        pipeline.instances.size() * sizeof(InstanceData),
-        pipeline.instances.data()
-    );
-
+    for (int i = 0; i < pipeline.texture_slots.size(); i++) {
+        glActiveTexture(GL_TEXTURE0 + i);
+        glBindTexture(GL_TEXTURE_2D, pipeline.texture_slots[i]->get_texture());
+    }
 
     pipeline.material->use();
+
 
     glDrawElementsInstanced(
         GL_TRIANGLES,
