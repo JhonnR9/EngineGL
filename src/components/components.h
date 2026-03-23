@@ -20,9 +20,10 @@ struct Transform {
 
 struct Sprite {
     std::string texture_path;
-    Color color = {255, 255, 255};
-    bool flipped = false;
-    Vector2 origin = Vector2(0, 0);
+    Color color = {1.f, 1.f, 1.f, 1.0f};
+    bool flipped_x = false;
+    bool flipped_y = false;
+    Rect src_rect = Rect();
 };
 
 #endif //COMPONENTS_H

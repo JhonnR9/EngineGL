@@ -6,30 +6,29 @@
 #define MY_SCENE_H
 #include <memory>
 
-#include "../systems/scene.h"
+#include "scene.h"
 #include "../graphics/sprite_batch.h"
-#include "../graphics/texture_2d.h"
+#include "graphics/texture_2d.h"
+#include "entt/entt.hpp"
 
 
-class MyScene final : public Scene{
-
-    std::unique_ptr<SpriteBatch> batch{nullptr};
-    std::shared_ptr<Texture2D> texture1;
-
-    const int num_draws{4096};
-    unsigned int seed{0};
+class MyScene final : public Scene {
+    entt::entity player_entity;
+    float player_speed{400};
+    Vector2 direction;
+    bool right{false}, left{false}, up{false}, down{false};
 
 public:
-    MyScene(App &app);
+    MyScene(App &app, entt::registry &registry);
+
     void init() override;
 
     void update(float delta) override;
 
-    void render() override;
+    void render(SpriteBatch &batch) override;
 
-    void resize(int width, int height) override;
+    void key_callback(int key, int scancode, int action, int mods) override;
 };
-
 
 
 #endif //MY_SCENE_H

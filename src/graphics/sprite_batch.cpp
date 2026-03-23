@@ -63,38 +63,43 @@ bool SpriteBatch::create_instance_buffer() {
 
     // aTranslation (vec2)
     glEnableVertexAttribArray(3);
-    glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(InstanceData), (void*)offsetof(InstanceData, position));
+    glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(InstanceData), (void *) offsetof(InstanceData, position));
     glVertexAttribDivisor(3, 1);
 
     // aOrigin (vec2)
     glEnableVertexAttribArray(4);
-    glVertexAttribPointer(4, 2, GL_FLOAT, GL_FALSE, sizeof(InstanceData), (void*)offsetof(InstanceData, origin));
+    glVertexAttribPointer(4, 2, GL_FLOAT, GL_FALSE, sizeof(InstanceData), (void *) offsetof(InstanceData, origin));
     glVertexAttribDivisor(4, 1);
 
     // aRotation (float)
     glEnableVertexAttribArray(5);
-    glVertexAttribPointer(5, 1, GL_FLOAT, GL_FALSE, sizeof(InstanceData), (void*)offsetof(InstanceData, rotation));
+    glVertexAttribPointer(5, 1, GL_FLOAT, GL_FALSE, sizeof(InstanceData), (void *) offsetof(InstanceData, rotation));
     glVertexAttribDivisor(5, 1);
 
     // aScale (vec2)
     glEnableVertexAttribArray(6);
-    glVertexAttribPointer(6, 2, GL_FLOAT, GL_FALSE, sizeof(InstanceData), (void*)offsetof(InstanceData, scale));
+    glVertexAttribPointer(6, 2, GL_FLOAT, GL_FALSE, sizeof(InstanceData), (void *) offsetof(InstanceData, scale));
     glVertexAttribDivisor(6, 1);
 
     // aInstanceColor (vec4)
     glEnableVertexAttribArray(7);
-    glVertexAttribPointer(7, 4, GL_FLOAT, GL_FALSE, sizeof(InstanceData), (void*)offsetof(InstanceData, color));
+    glVertexAttribPointer(7, 4, GL_FLOAT, GL_FALSE, sizeof(InstanceData), (void *) offsetof(InstanceData, color));
     glVertexAttribDivisor(7, 1);
 
     // aRegion (vec4)
     glEnableVertexAttribArray(8);
-    glVertexAttribPointer(8, 4, GL_FLOAT, GL_FALSE, sizeof(InstanceData), (void*)offsetof(InstanceData, region));
+    glVertexAttribPointer(8, 4, GL_FLOAT, GL_FALSE, sizeof(InstanceData), (void *) offsetof(InstanceData, region));
     glVertexAttribDivisor(8, 1);
 
     // aTexIndex (float)
     glEnableVertexAttribArray(9);
-    glVertexAttribPointer(9, 1, GL_FLOAT, GL_FALSE, sizeof(InstanceData), (void*)offsetof(InstanceData, tex_index));
+    glVertexAttribPointer(9, 1, GL_FLOAT, GL_FALSE, sizeof(InstanceData), (void *) offsetof(InstanceData, tex_index));
     glVertexAttribDivisor(9, 1);
+
+    // aFlip (int)
+    glEnableVertexAttribArray(10);
+    glVertexAttribIPointer(10, 1, GL_INT, sizeof(InstanceData), (void *) offsetof(InstanceData, flip));
+    glVertexAttribDivisor(10, 1);
 
 
     return pipeline.instance_vbo != 0;
@@ -114,7 +119,7 @@ bool SpriteBatch::create_index_buffer() {
     return pipeline.ebo != 0;
 }
 
-bool SpriteBatch::create_default_shader()  {
+bool SpriteBatch::create_default_shader() {
     auto shader = std::make_unique<Shader>(
         SourcePath(RESOURCE_PATH"/default_shader.vert", RESOURCE_PATH"/default_shader.frag"));
 
@@ -132,9 +137,9 @@ void SpriteBatch::begin() {
     pipeline.instances.clear();
     pipeline.texture_slots.clear();
 }
-void SpriteBatch::draw_texture(Texture2D *texture, Vector2 position, Vector2 scale,
-                               float rotation, Vector2 origin, Color color, Rect sourceRect) {
 
+void SpriteBatch::draw_texture(Texture2D *texture, Vector2 position, Vector2 scale,
+                               float rotation, Vector2 origin, Color color, Rect sourceRect, bool flip_x, bool flip_y) {
     if (pipeline.instances.size() >= pipeline.MAX_INSTANCES) {
         flush();
     }
@@ -149,8 +154,8 @@ void SpriteBatch::draw_texture(Texture2D *texture, Vector2 position, Vector2 sca
 
     it = std::find(pipeline.texture_slots.begin(), pipeline.texture_slots.end(), texture);
 
-    float srcW = (sourceRect.width > 0) ? sourceRect.width : (float)texture->get_width();
-    float srcH = (sourceRect.height > 0) ? sourceRect.height : (float)texture->get_height();
+    float srcW = (sourceRect.width > 0) ? sourceRect.width : (float) texture->get_width();
+    float srcH = (sourceRect.height > 0) ? sourceRect.height : (float) texture->get_height();
 
     float pivotX = (origin.x / srcW) - 0.5f;
     float pivotY = (origin.y / srcH) - 0.5f;
@@ -159,7 +164,7 @@ void SpriteBatch::draw_texture(Texture2D *texture, Vector2 position, Vector2 sca
     InstanceData instance;
     instance.position = glm::vec2(position.x, position.y);
     instance.origin = glm::vec2(pivotX, pivotY);
-    instance.scale = glm::vec2(srcW, srcH);
+    instance.scale = glm::vec2(srcW * scale.x, srcH * scale.y);
     instance.rotation = rotation;
 
     instance.color[0] = color.r;
@@ -167,14 +172,15 @@ void SpriteBatch::draw_texture(Texture2D *texture, Vector2 position, Vector2 sca
     instance.color[2] = color.b;
     instance.color[3] = color.a;
 
-    float tex_w = (float)texture->get_width();
-    float tex_h = (float)texture->get_height();
+    float tex_w = (float) texture->get_width();
+    float tex_h = (float) texture->get_height();
 
     instance.region.x = sourceRect.x / tex_w;
     instance.region.y = sourceRect.y / tex_h;
     instance.region.z = srcW / tex_w;
     instance.region.w = srcH / tex_h;
 
+    instance.flip = (flip_x ? 1 : 0) | (flip_y ? 2 : 0);
 
     if (it != pipeline.texture_slots.end()) {
         instance.tex_index = it - pipeline.texture_slots.begin();
@@ -186,6 +192,52 @@ void SpriteBatch::draw_texture(Texture2D *texture, Vector2 position, Vector2 sca
     pipeline.instances.push_back(instance);
 }
 
+void SpriteBatch::draw_texture(Texture2D *texture, Vector2 position) {
+    draw_texture(
+        texture,
+        position,
+        Vector2{1.0f, 1.0f},
+        0.0f,
+        Vector2{0.0f, 0.0f},
+        Color{1.0f, 1.0f, 1.0f, 1.0f},
+        Rect{0, 0, (float) texture->get_width(), (float) texture->get_height()}
+    );
+}
+
+void SpriteBatch::draw_texture(Texture2D *texture, Vector2 position, Vector2 scale) {
+    draw_texture(
+        texture,
+        position,
+        scale,
+        0.0f,
+        Vector2{0.0f, 0.0f},
+        Color{1.0f, 1.0f, 1.0f, 1.0f},
+        Rect{0, 0, (float) texture->get_width(), (float) texture->get_height()}
+    );
+}
+
+void SpriteBatch::draw_texture(Texture2D *texture, Vector2 position, Vector2 scale, float rotation) {
+    draw_texture(
+        texture,
+        position,
+        scale,
+        rotation,
+        Vector2{0.0f, 0.0f},
+        Color{1.0f, 1.0f, 1.0f, 1.0f},
+        Rect{0, 0, (float) texture->get_width(), (float) texture->get_height()}
+    );
+}
+
+void SpriteBatch::draw_texture(Texture2D *texture, Vector2 position, Vector2 scale, float rotation, Color color) {
+    draw_texture(
+        texture,
+        position,
+        scale,
+        rotation,
+        Vector2{0.0f, 0.0f},
+        color,
+        Rect{0, 0, (float) texture->get_width(), (float) texture->get_height()});
+}
 
 
 void SpriteBatch::flush() const {
@@ -216,9 +268,8 @@ void SpriteBatch::end() const {
     );
 }
 
-void SpriteBatch::set_projection(const glm::mat<4,4,float> &projection) {
+void SpriteBatch::set_projection(const glm::mat<4, 4, float> &projection) {
     pipeline.projection = projection;
-
 }
 
 SpriteBatch::~SpriteBatch() {

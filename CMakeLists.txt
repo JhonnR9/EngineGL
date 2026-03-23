@@ -33,6 +33,8 @@ add_executable(EngineGL
         src/scenes/scene.cpp
         src/scenes/my_scene.cpp
         src/systems/system.h
+        src/systems/render_system.cpp
+        src/systems/render_system.h
 )
 
 target_include_directories(EngineGL PRIVATE "src/vendor")

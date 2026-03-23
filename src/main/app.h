@@ -4,10 +4,10 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <memory>
-#include "systems/scene.h"
-#include "glm/vec2.hpp"
-#include <entt/entt.hpp>
+#include "../scenes/scene.h"
 
+
+#include "graphics/sprite_batch.h"
 #include "systems/system.h"
 
 class GLFWwindow;
@@ -18,17 +18,18 @@ struct WindowConfig {
     int windowed_ypos = 100;
     int windowed_width = 840;
     int windowed_height = 480;
-    bool use_vsync = true;
+    bool use_vsync = false;
 };
 
 class App {
     WindowConfig config;
-
+    std::unique_ptr<SpriteBatch> batch{nullptr};
     GLFWwindow *window = nullptr;
     std::unique_ptr<Scene> current_scene{nullptr};
     std::vector<std::unique_ptr<System>> systems{};
 
     std::unique_ptr<entt::registry> registry{nullptr};
+
 
     App() = default;
 
@@ -44,6 +45,9 @@ public:
 
     template<typename T>
     void add_system();
+    entt::registry &get_registry() const {
+        return *registry;
+    }
 
     static App &getInstance() {
         static App instance;
@@ -62,6 +66,10 @@ public:
     }
 
     void init();
+
+    SpriteBatch* get_sprite_batch() const {
+        return batch.get();
+    }
 
     void game_loop();
 
