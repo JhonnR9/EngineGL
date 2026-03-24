@@ -35,6 +35,8 @@ add_executable(EngineGL
         src/systems/system.h
         src/systems/render_system.cpp
         src/systems/render_system.h
+        src/graphics/shape_renderer.cpp
+        src/graphics/shape_renderer.h
 )
 
 target_include_directories(EngineGL PRIVATE "src/vendor")

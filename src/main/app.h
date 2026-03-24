@@ -5,6 +5,7 @@
 #include <GLFW/glfw3.h>
 #include <memory>
 #include "../scenes/scene.h"
+#include "graphics/shape_renderer.h"
 
 
 #include "graphics/sprite_batch.h"
@@ -24,12 +25,12 @@ struct WindowConfig {
 class App {
     WindowConfig config;
     std::unique_ptr<SpriteBatch> batch{nullptr};
+    std::unique_ptr<ShapeRenderer>shape_renderer{nullptr};
     GLFWwindow *window = nullptr;
     std::unique_ptr<Scene> current_scene{nullptr};
     std::vector<std::unique_ptr<System>> systems{};
 
     std::unique_ptr<entt::registry> registry{nullptr};
-
 
     App() = default;
 

@@ -27,6 +27,10 @@ void MyScene::init() {
     registry.emplace<Sprite>(yuzuha, sprite);
 
     player_entity = yuzuha;
+
+    auto &value = registry.ctx().get<int>();
+    shape_renderer  = registry.ctx().get<ShapeRenderer *>();
+
 }
 
 void MyScene::update(float delta) {
@@ -39,7 +43,16 @@ void MyScene::update(float delta) {
 }
 
 void MyScene::render(SpriteBatch &batch) {
+    Rect rect;
+    rect.x = 300, rect.y = 300;
+    rect.width = 100, rect.height = 100;
 
+    Color color;
+    color.r = 1.0f, color.g = 1.0f, color.b = .0f, color.a = 1.0f;
+
+    shape_renderer->begin();
+    shape_renderer->draw_rect(rect, color);
+    shape_renderer->end();
 }
 
 void MyScene::key_callback(int key, int scancode, int action, int mods) {

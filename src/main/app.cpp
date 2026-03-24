@@ -50,6 +50,7 @@ void App::framebuffer_size_callback_redirect(GLFWwindow *window, int width, int 
     const auto projection = glm::ortho(0.0f, app.VIRTUAL_WIDTH, app.VIRTUAL_HEIGHT, 0.0f, -1.0f, 1.0f);
 
     app.get_sprite_batch()->set_projection(projection);
+
 }
 
 void App::init() {
@@ -85,10 +86,14 @@ void App::init() {
 
     registry = std::make_unique<entt::registry>();
     batch = std::make_unique<SpriteBatch>(get_windowed_width(), get_windowed_height());
+    shape_renderer = std::make_unique<ShapeRenderer>();
     auto projection = glm::ortho(0.0f, VIRTUAL_WIDTH, VIRTUAL_HEIGHT, 0.0f, -1.0f, 1.0f);
     batch->set_projection(projection);
+    shape_renderer->set_projection(projection);
 
     systems.emplace_back(std::move(std::make_unique<RenderSystem>(*registry, *batch)));
+
+    registry->ctx().emplace<ShapeRenderer*>(shape_renderer.get());
 }
 
 void App::game_loop() {
