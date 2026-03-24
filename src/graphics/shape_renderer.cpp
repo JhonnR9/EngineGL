@@ -57,7 +57,7 @@ bool ShapeRenderer::create_quad_dynamic_buffers() {
     glBufferData(GL_ARRAY_BUFFER, pipeline->MAX_INSTANCES * sizeof(QuadInstance), nullptr, GL_DYNAMIC_DRAW);
     // location = 1  Position
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(QuadInstance),  (void*) offsetof(QuadInstance, position));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(QuadInstance), (void *) offsetof(QuadInstance, position));
     glVertexAttribDivisor(1, 1);
 
     // location = 2 Origin
@@ -80,7 +80,12 @@ bool ShapeRenderer::create_quad_dynamic_buffers() {
     glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(QuadInstance), (void *) offsetof(QuadInstance, color));
     glVertexAttribDivisor(5, 1);
 
-    return pipeline->quad_ibo != 0 ;
+    // location = 6 ShapeType
+    glEnableVertexAttribArray(6);
+    glVertexAttribIPointer(6, 1,GL_INT, sizeof(QuadInstance), (void *) offsetof(QuadInstance, shape_type));
+    glVertexAttribDivisor(6, 1);
+
+    return pipeline->quad_ibo != 0;
 }
 
 void ShapeRenderer::setup_buffers() {
@@ -96,6 +101,38 @@ void ShapeRenderer::setup_buffers() {
 
     pipeline->shader = std::make_unique<Shader>(
         SourcePath(RESOURCE_PATH"/shape_renderer.vert", RESOURCE_PATH"/shape_renderer.frag"));
+}
+
+void ShapeRenderer::draw_shape(Rect rect, Color color, Vector2 origin, float rotation, ShapeType type) {
+    if (rect.width <= 0.0f || rect.height <= 0.0f) {
+        return;
+    }
+
+    if (pipeline->quad_instances.size() >= pipeline->MAX_INSTANCES) {
+        flush();
+    }
+
+    QuadInstance instance;
+
+    instance.position.x = rect.x;
+    instance.position.y = rect.y;
+
+    instance.origin.x = origin.x;
+    instance.origin.y = origin.y;
+
+    instance.rotation = rotation;
+
+    instance.scale.x = rect.width;
+    instance.scale.y = rect.height;
+
+    instance.color.r = color.r;
+    instance.color.g = color.g;
+    instance.color.b = color.b;
+    instance.color.a = color.a;
+
+    instance.shape_type = type;
+
+    pipeline->quad_instances.push_back(instance);
 }
 
 void ShapeRenderer::flush() {
@@ -128,32 +165,15 @@ void ShapeRenderer::end() {
 }
 
 void ShapeRenderer::draw_rect(Rect rect, Color color, Vector2 origin, float rotation) {
-    if (rect.width <= 0.0f || rect.height <= 0.0f)
-    {
-        return;
-    }
+    draw_shape(rect, color, origin, rotation, Rectangle);
+}
 
-    if (pipeline->quad_instances.size() >= pipeline->MAX_INSTANCES) {
-        flush();
-    }
+void ShapeRenderer::draw_eclipse(Ellipse ellipse, Color color) {
+    Rect rect;
+    rect.x = ellipse.cx;
+    rect.y = ellipse.cy;
+    rect.width = ellipse.rx * 2.f;
+    rect.height = ellipse.ry * 2.f;
 
-    QuadInstance instance;
-
-    instance.position.x = rect.x;
-    instance.position.y = rect.y;
-
-    instance.origin.x = origin.x;
-    instance.origin.y = origin.y;
-
-    instance.rotation = rotation;
-
-    instance.scale.x = rect.width;
-    instance.scale.y = rect.height;
-
-    instance.color.r = color.r;
-    instance.color.g = color.g;
-    instance.color.b = color.b;
-    instance.color.a = color.a;
-
-    pipeline->quad_instances.push_back(instance);
+    draw_shape(rect, color, Vector2(0.5f, 0.5f), 0.0f, Eclipse);
 }

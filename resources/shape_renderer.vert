@@ -6,10 +6,14 @@ layout(location = 2) in vec2 aOrigin;
 layout(location = 3) in float aRotation;
 layout(location = 4) in vec2 aScale;
 layout(location = 5) in vec4 aInstanceColor;
+layout(location = 6) in int aShapeType;
 
 uniform mat4 uProjection;
 
 out vec4 vColor;
+out vec2 vLocalPos;
+flat out int vShapeType;
+out vec2 vScale;
 
 void main()
 {
@@ -28,4 +32,7 @@ void main()
     gl_Position = uProjection * vec4(finalPos, 0.0, 1.0);
 
     vColor = aInstanceColor;
+    vLocalPos = aPos; // -0.5 → 0.5
+    vShapeType = aShapeType;
+    vScale = aScale;
 }

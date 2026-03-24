@@ -11,6 +11,9 @@ struct Color {
 struct Rect {
     float x{0}, y{0}, width{0}, height{0};
 };
+struct Ellipse {
+    float cx{0}, cy{0}, rx{0}, ry{0};
+};
 
 struct Transform {
     Vector2 position = Vector2(0, 0);

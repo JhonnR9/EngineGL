@@ -42,18 +42,67 @@ void MyScene::update(float delta) {
     transform.position.y += direction.y * player_speed * delta;
 }
 
-void MyScene::render(SpriteBatch &batch) {
-    Rect rect;
-    rect.x = 300, rect.y = 300;
-    rect.width = 100, rect.height = 100;
-
-    Color color;
-    color.r = 1.0f, color.g = 1.0f, color.b = .0f, color.a = 1.0f;
-
+void MyScene::render(SpriteBatch &batch)
+{
     shape_renderer->begin();
-    shape_renderer->draw_rect(rect, color);
+
+    // 🔲 RETÂNGULOS
+    for (int i = 0; i < 10; i++)
+    {
+        Rect rect;
+        rect.x = 200 + i * 120;
+        rect.y = 100;
+        rect.width = 80;
+        rect.height = 60;
+
+        Color c;
+        c.r = 1.0f;
+        c.g = i * 0.2f;
+        c.b = 0.2f;
+        c.a = 1.0f;
+
+        shape_renderer->draw_rect(rect, c);
+    }
+
+    // 🔵 CÍRCULOS
+    for (int i = 0; i < 10; i++)
+    {
+        Ellipse e;
+        e.cx = 200 + i * 120;
+        e.cy = 300;
+        e.rx = 40;
+        e.ry = 40; // círculo
+
+        Color c;
+        c.r = i * 0.2f;
+        c.g = 0.5f;
+        c.b = 1.0f;
+        c.a = 1.0f;
+
+        shape_renderer->draw_eclipse(e, c);
+    }
+
+    // 🟣 ELIPSES
+    for (int i = 0; i < 10; i++)
+    {
+        Ellipse e;
+        e.cx = 200 + i * 120;
+        e.cy = 500;
+        e.rx = 60;
+        e.ry = 30;
+
+        Color c;
+        c.r = 1.0f;
+        c.g = 0.3f;
+        c.b = i * 0.2f;
+        c.a = 1.0f;
+
+        shape_renderer->draw_eclipse(e, c);
+    }
+
     shape_renderer->end();
 }
+
 
 void MyScene::key_callback(int key, int scancode, int action, int mods) {
     bool pressed = action != 0;

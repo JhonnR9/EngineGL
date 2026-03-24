@@ -20,6 +20,7 @@ class ShapeRenderer {
         float rotation;
         glm::vec2 scale;
         glm::vec4 color;
+        int shape_type;
     };
 
     struct Pipeline {
@@ -30,7 +31,10 @@ class ShapeRenderer {
         glm::mat4 projection{1.0f};
     };
 
-
+    enum ShapeType {
+        Rectangle,
+        Eclipse
+    };
 
     std::unique_ptr<Pipeline> pipeline{nullptr};
 
@@ -44,12 +48,14 @@ private:
     bool create_quad_dynamic_buffers();
 
     void setup_buffers();
+    void draw_shape(Rect rect, Color color, Vector2 origin={0.0, 0.0}, float rotation={0.0f}, ShapeType type= Rectangle);
 
 public:
     void flush();
     void begin();
     void end();
     void draw_rect(Rect rect, Color color, Vector2 origin={0.0, 0.0}, float rotation={0.0f});
+    void draw_eclipse(Ellipse ellipse, Color color);
 };
 
 
