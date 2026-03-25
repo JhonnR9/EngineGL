@@ -19,6 +19,14 @@ class MyScene final : public Scene {
     Vector2 direction;
     bool right{false}, left{false}, up{false}, down{false};
     ShapeRenderer *shape_renderer{nullptr};
+    OrthographicCamera* main_camera{nullptr};
+    Vector2 position_cache{0.0f,0.0f};
+    bool zoom_in = false;
+    bool zoom_out = false;
+
+    float zoom = 1.0f;
+    float zoom_speed = 1.5f;
+
 
 public:
     MyScene(App &app, entt::registry &registry);

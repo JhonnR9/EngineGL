@@ -6,13 +6,18 @@
 
 #include <iostream>
 
-ShapeRenderer::ShapeRenderer() {
+ShapeRenderer::ShapeRenderer(OrthographicCamera* camera) {
     setup_buffers();
+    if (!camera) {
+        std::cerr << "camera pointer is null" << std::endl;
+    }else {
+        if (pipeline->shader) {
+            pipeline->shader->set_mat4("uViewProjection", camera->get_view_projection());
+        }
+    }
+    this->pipeline->camera =camera;
 }
 
-void ShapeRenderer::set_projection(const glm::mat<4, 4, float> &projection) {
-    pipeline->projection = projection;
-}
 
 bool ShapeRenderer::create_vertex_array_object() {
     glGenVertexArrays(1, &pipeline->vao);
@@ -90,6 +95,8 @@ bool ShapeRenderer::create_quad_dynamic_buffers() {
 
 void ShapeRenderer::setup_buffers() {
     pipeline = std::make_unique<Pipeline>();
+    pipeline->shader = std::make_unique<Shader>(
+       SourcePath(RESOURCE_PATH"/shape_renderer.vert", RESOURCE_PATH"/shape_renderer.frag"));
 
     if (!create_vertex_array_object()) {
         std::cerr << "Error creating vertex array object" << std::endl;
@@ -99,8 +106,7 @@ void ShapeRenderer::setup_buffers() {
         std::cerr << "Error creating quad buffers" << std::endl;
     }
 
-    pipeline->shader = std::make_unique<Shader>(
-        SourcePath(RESOURCE_PATH"/shape_renderer.vert", RESOURCE_PATH"/shape_renderer.frag"));
+
 }
 
 void ShapeRenderer::draw_shape(Rect rect, Color color, Vector2 origin, float rotation, ShapeType type) {
@@ -143,12 +149,17 @@ void ShapeRenderer::flush() {
 void ShapeRenderer::begin() {
     glBindVertexArray(pipeline->vao);
     pipeline->quad_instances.clear();
+
+    if (pipeline->camera ) {
+        pipeline->shader->use();
+        pipeline->shader->set_mat4("uViewProjection", pipeline->camera->get_view_projection());
+    }
+
 }
 
 void ShapeRenderer::end() {
     pipeline->shader->use();
     if (!pipeline->quad_instances.empty()) {
-        pipeline->shader->set_mat4("uProjection", pipeline->projection);
 
         glBindBuffer(GL_ARRAY_BUFFER, pipeline->quad_ibo);
         glBufferSubData(GL_ARRAY_BUFFER, 0, pipeline->quad_instances.size() * sizeof(QuadInstance),

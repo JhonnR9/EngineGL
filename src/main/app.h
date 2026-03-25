@@ -4,7 +4,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <memory>
-#include "../scenes/scene.h"
+#include "scenes/scene.h"
 #include "graphics/shape_renderer.h"
 
 
@@ -29,6 +29,7 @@ class App {
     GLFWwindow *window = nullptr;
     std::unique_ptr<Scene> current_scene{nullptr};
     std::vector<std::unique_ptr<System>> systems{};
+    std::unique_ptr<OrthographicCamera> main_camera{nullptr};
 
     std::unique_ptr<entt::registry> registry{nullptr};
 
@@ -53,6 +54,9 @@ public:
     static App &getInstance() {
         static App instance;
         return instance;
+    }
+    OrthographicCamera* get_main_camera() const {
+        return main_camera.get();
     }
 
     int get_windowed_width() const { return config.windowed_width; }

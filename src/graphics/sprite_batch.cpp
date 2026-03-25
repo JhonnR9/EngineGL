@@ -2,16 +2,26 @@
 
 #include <iostream>
 #include <glm/gtc/matrix_transform.hpp>
+
+#include "main/app.h"
 #include "utils/vector2.h"
 
-SpriteBatch::SpriteBatch(float screenWidth, float screenHeight) {
-    pipeline.projection = glm::ortho(0.0f, screenWidth, screenHeight, 0.0f, -1.0f, 1.0f);
-
+SpriteBatch::SpriteBatch(OrthographicCamera* camera) {
     if (!create_default_shader()) {
         std::cerr << "Error creating default shader" << std::endl;
     }
 
     setup_buffers();
+
+    if (!camera) {
+        std::cerr << "Error: Camera pointer canot be null in SpriteBatch!" << std::endl;
+    }else {
+        pipeline.shader->set_mat4("uViewProjection", camera->get_view_projection());
+    }
+
+
+    pipeline.camera = camera;
+
 }
 
 void SpriteBatch::setup_buffers() {
@@ -133,6 +143,15 @@ bool SpriteBatch::create_default_shader() {
 }
 
 void SpriteBatch::begin() {
+    pipeline.shader->use();
+
+    if (pipeline.camera) {
+        pipeline.shader->use();
+        pipeline.shader->set_mat4("uViewProjection", pipeline.camera->get_view_projection());
+
+    }
+
+
     glBindVertexArray(pipeline.vao);
     pipeline.instances.clear();
     pipeline.texture_slots.clear();
@@ -248,7 +267,7 @@ void SpriteBatch::end() const {
     if (pipeline.instances.empty()) return;
 
     pipeline.shader->use();
-    pipeline.shader->set_mat4("uProjection", pipeline.projection);
+
 
     glBindBuffer(GL_ARRAY_BUFFER, pipeline.instance_vbo);
     glBufferData(GL_ARRAY_BUFFER, pipeline.MAX_INSTANCES * sizeof(InstanceData), nullptr, GL_STREAM_DRAW);
@@ -268,9 +287,6 @@ void SpriteBatch::end() const {
     );
 }
 
-void SpriteBatch::set_projection(const glm::mat<4, 4, float> &projection) {
-    pipeline.projection = projection;
-}
 
 SpriteBatch::~SpriteBatch() {
     glDeleteBuffers(1, &pipeline.vbo);

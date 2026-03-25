@@ -6,6 +6,7 @@
 #include <vector>
 #include <memory>
 
+#include "orthographic_camera.h"
 #include "shader.h"
 #include "graphics/texture_2d.h"
 #include "components/components.h"
@@ -29,19 +30,19 @@ class SpriteBatch {
         GLuint vbo{0};
         GLuint ebo{0};
         GLuint instance_vbo{0};
-        glm::mat4 projection{1.0f};
         std::unique_ptr<Shader> shader{nullptr};
         unsigned int MAX_INSTANCES{4096};
         std::vector<InstanceData> instances;
         static constexpr int MAX_TEXTURE_SLOTS = 16;
         std::vector<Texture2D *> texture_slots;
+        OrthographicCamera* camera{nullptr};
     };
 
 
     Pipeline pipeline;
 
 public:
-    SpriteBatch(float screenWidth, float screenHeight);
+    SpriteBatch(OrthographicCamera* camera);
 
     ~SpriteBatch();
 
@@ -70,8 +71,6 @@ public:
     void flush() const;
 
     void end() const;
-
-    void set_projection(const glm::mat<4, 4, float> &projection);
 
 private:
     void setup_buffers();

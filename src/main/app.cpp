@@ -47,9 +47,8 @@ void App::framebuffer_size_callback_redirect(GLFWwindow *window, int width, int 
     int viewY = (height / 2) - (viewHeight / 2);
 
     glViewport(viewX, viewY, viewWidth, viewHeight);
-    const auto projection = glm::ortho(0.0f, app.VIRTUAL_WIDTH, app.VIRTUAL_HEIGHT, 0.0f, -1.0f, 1.0f);
 
-    app.get_sprite_batch()->set_projection(projection);
+
 
 }
 
@@ -85,15 +84,15 @@ void App::init() {
     glfwSwapInterval(config.use_vsync);
 
     registry = std::make_unique<entt::registry>();
-    batch = std::make_unique<SpriteBatch>(get_windowed_width(), get_windowed_height());
-    shape_renderer = std::make_unique<ShapeRenderer>();
-    auto projection = glm::ortho(0.0f, VIRTUAL_WIDTH, VIRTUAL_HEIGHT, 0.0f, -1.0f, 1.0f);
-    batch->set_projection(projection);
-    shape_renderer->set_projection(projection);
+    main_camera = std::make_unique<OrthographicCamera>(VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
+    batch = std::make_unique<SpriteBatch>(get_main_camera());
+    shape_renderer = std::make_unique<ShapeRenderer>(get_main_camera());
+
 
     systems.emplace_back(std::move(std::make_unique<RenderSystem>(*registry, *batch)));
 
     registry->ctx().emplace<ShapeRenderer*>(shape_renderer.get());
+    registry->ctx().emplace<OrthographicCamera*>(get_main_camera());
 }
 
 void App::game_loop() {
@@ -106,14 +105,16 @@ void App::game_loop() {
         glClear(GL_COLOR_BUFFER_BIT);
         glClearColor(0.043f, 0.067, 0.090, 1.0f);
 
-        for (auto &system: systems) {
-            system->run(deltaTime);
-        }
         if (current_scene) {
             current_scene->update(deltaTime);
             current_scene->render(*batch);
 
         }
+
+        for (auto &system: systems) {
+            system->run(deltaTime); // render system call bath begin  and etc
+        }
+
 
         glfwSwapBuffers(window);
         glfwPollEvents();

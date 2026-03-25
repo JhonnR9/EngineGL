@@ -37,6 +37,8 @@ add_executable(EngineGL
         src/systems/render_system.h
         src/graphics/shape_renderer.cpp
         src/graphics/shape_renderer.h
+        src/graphics/orthographic_camera.cpp
+        src/graphics/orthographic_camera.h
 )
 
 target_include_directories(EngineGL PRIVATE "src/vendor")

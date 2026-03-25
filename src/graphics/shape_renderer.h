@@ -7,6 +7,7 @@
 #include <memory>
 #include <vector>
 
+#include "orthographic_camera.h"
 #include "shader.h"
 #include "components/components.h"
 #include "glm/vec2.hpp"
@@ -29,6 +30,7 @@ class ShapeRenderer {
         std::unique_ptr<Shader> shader;
         std::vector<QuadInstance> quad_instances;
         glm::mat4 projection{1.0f};
+        OrthographicCamera* camera{nullptr};
     };
 
     enum ShapeType {
@@ -39,8 +41,7 @@ class ShapeRenderer {
     std::unique_ptr<Pipeline> pipeline{nullptr};
 
 public:
-    ShapeRenderer();
-    void set_projection(const glm::mat<4, 4, float> &projection);
+    ShapeRenderer(OrthographicCamera* camera);
 
 private:
     bool create_vertex_array_object();
@@ -48,13 +49,13 @@ private:
     bool create_quad_dynamic_buffers();
 
     void setup_buffers();
-    void draw_shape(Rect rect, Color color, Vector2 origin={0.0, 0.0}, float rotation={0.0f}, ShapeType type= Rectangle);
+    void draw_shape(Rect rect, Color color, Vector2 origin={0.0, 0.0}, float rotation=0.0f, ShapeType type= Rectangle);
 
 public:
     void flush();
     void begin();
     void end();
-    void draw_rect(Rect rect, Color color, Vector2 origin={0.0, 0.0}, float rotation={0.0f});
+    void draw_rect(Rect rect, Color color, Vector2 origin={0.0, 0.0}, float rotation=0.0f);
     void draw_eclipse(Ellipse ellipse, Color color);
 };
 
