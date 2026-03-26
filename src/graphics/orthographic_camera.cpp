@@ -18,12 +18,12 @@ void OrthographicCamera::update_projection() {
         virtual_width,
         virtual_height,
         0.0f,
-        -1.0f,
-        1.0f
+        -100.0f, // near
+        100.0f // far
     );
 }
 
-void OrthographicCamera::set_position(Vector2 pos)  {
+void OrthographicCamera::set_position(Vector2 pos) {
     position = glm::vec2(pos.x, pos.y);
     dirty = true;
 }
@@ -47,5 +47,4 @@ glm::mat4 OrthographicCamera::get_view_projection() {
         dirty = false;
     }
     return projection * view;
-
 }

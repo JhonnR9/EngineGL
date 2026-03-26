@@ -6,7 +6,7 @@
 #include "main/app.h"
 #include "utils/vector2.h"
 
-SpriteBatch::SpriteBatch(OrthographicCamera* camera) {
+SpriteBatch::SpriteBatch(OrthographicCamera *camera) {
     if (!create_default_shader()) {
         std::cerr << "Error creating default shader" << std::endl;
     }
@@ -15,13 +15,12 @@ SpriteBatch::SpriteBatch(OrthographicCamera* camera) {
 
     if (!camera) {
         std::cerr << "Error: Camera pointer canot be null in SpriteBatch!" << std::endl;
-    }else {
+    } else {
         pipeline.shader->set_mat4("uViewProjection", camera->get_view_projection());
     }
 
 
     pipeline.camera = camera;
-
 }
 
 void SpriteBatch::setup_buffers() {
@@ -111,6 +110,10 @@ bool SpriteBatch::create_instance_buffer() {
     glVertexAttribIPointer(10, 1, GL_INT, sizeof(InstanceData), (void *) offsetof(InstanceData, flip));
     glVertexAttribDivisor(10, 1);
 
+    // aZindex (float)
+    glEnableVertexAttribArray(11);
+    glVertexAttribPointer(11, 1, GL_FLOAT,GL_FALSE, sizeof(InstanceData), (void *) offsetof(InstanceData, z_index));
+    glVertexAttribDivisor(11, 1);
 
     return pipeline.instance_vbo != 0;
 }
@@ -148,7 +151,6 @@ void SpriteBatch::begin() {
     if (pipeline.camera) {
         pipeline.shader->use();
         pipeline.shader->set_mat4("uViewProjection", pipeline.camera->get_view_projection());
-
     }
 
 
@@ -158,7 +160,8 @@ void SpriteBatch::begin() {
 }
 
 void SpriteBatch::draw_texture(Texture2D *texture, Vector2 position, Vector2 scale,
-                               float rotation, Vector2 origin, Color color, Rect sourceRect, bool flip_x, bool flip_y) {
+                               float rotation, Vector2 origin, Color color, Rect sourceRect, bool flip_x, bool flip_y,
+                               float z_index) {
     if (pipeline.instances.size() >= pipeline.MAX_INSTANCES) {
         flush();
     }
@@ -200,6 +203,7 @@ void SpriteBatch::draw_texture(Texture2D *texture, Vector2 position, Vector2 sca
     instance.region.w = srcH / tex_h;
 
     instance.flip = (flip_x ? 1 : 0) | (flip_y ? 2 : 0);
+    instance.z_index = z_index;
 
     if (it != pipeline.texture_slots.end()) {
         instance.tex_index = it - pipeline.texture_slots.begin();
@@ -211,7 +215,7 @@ void SpriteBatch::draw_texture(Texture2D *texture, Vector2 position, Vector2 sca
     pipeline.instances.push_back(instance);
 }
 
-void SpriteBatch::draw_texture(Texture2D *texture, Vector2 position) {
+void SpriteBatch::draw_texture(Texture2D *texture, Vector2 position, float z_index) {
     draw_texture(
         texture,
         position,
@@ -219,11 +223,14 @@ void SpriteBatch::draw_texture(Texture2D *texture, Vector2 position) {
         0.0f,
         Vector2{0.0f, 0.0f},
         Color{1.0f, 1.0f, 1.0f, 1.0f},
-        Rect{0, 0, (float) texture->get_width(), (float) texture->get_height()}
+        Rect{0, 0, (float) texture->get_width(), (float) texture->get_height()},
+        false,
+        false,
+        z_index
     );
 }
 
-void SpriteBatch::draw_texture(Texture2D *texture, Vector2 position, Vector2 scale) {
+void SpriteBatch::draw_texture(Texture2D *texture, Vector2 position, Vector2 scale, float z_index) {
     draw_texture(
         texture,
         position,
@@ -231,11 +238,14 @@ void SpriteBatch::draw_texture(Texture2D *texture, Vector2 position, Vector2 sca
         0.0f,
         Vector2{0.0f, 0.0f},
         Color{1.0f, 1.0f, 1.0f, 1.0f},
-        Rect{0, 0, (float) texture->get_width(), (float) texture->get_height()}
+        Rect{0, 0, (float) texture->get_width(), (float) texture->get_height()},
+        false,
+        false,
+        z_index
     );
 }
 
-void SpriteBatch::draw_texture(Texture2D *texture, Vector2 position, Vector2 scale, float rotation) {
+void SpriteBatch::draw_texture(Texture2D *texture, Vector2 position, Vector2 scale, float rotation, float z_index) {
     draw_texture(
         texture,
         position,
@@ -243,11 +253,15 @@ void SpriteBatch::draw_texture(Texture2D *texture, Vector2 position, Vector2 sca
         rotation,
         Vector2{0.0f, 0.0f},
         Color{1.0f, 1.0f, 1.0f, 1.0f},
-        Rect{0, 0, (float) texture->get_width(), (float) texture->get_height()}
+        Rect{0, 0, (float) texture->get_width(), (float) texture->get_height()},
+        false,
+        false,
+        z_index
     );
 }
 
-void SpriteBatch::draw_texture(Texture2D *texture, Vector2 position, Vector2 scale, float rotation, Color color) {
+void SpriteBatch::draw_texture(Texture2D *texture, Vector2 position, Vector2 scale, float rotation, Color color,
+                               float z_index) {
     draw_texture(
         texture,
         position,
@@ -255,7 +269,11 @@ void SpriteBatch::draw_texture(Texture2D *texture, Vector2 position, Vector2 sca
         rotation,
         Vector2{0.0f, 0.0f},
         color,
-        Rect{0, 0, (float) texture->get_width(), (float) texture->get_height()});
+        Rect{0, 0, (float) texture->get_width(), (float) texture->get_height()}
+        ,
+        false,
+        false,
+        z_index);
 }
 
 

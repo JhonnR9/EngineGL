@@ -7,6 +7,7 @@ layout(location = 3) in float aRotation;
 layout(location = 4) in vec2 aScale;
 layout(location = 5) in vec4 aInstanceColor;
 layout(location = 6) in int aShapeType;
+layout(location = 7) in float aZIndex;
 
 uniform mat4 uViewProjection;
 
@@ -17,7 +18,7 @@ out vec2 vScale;
 
 void main()
 {
-    vec2 pivotOffset = aOrigin * aScale;
+    vec2 pivotOffset = (aOrigin - vec2(0.5)) * aScale;
     vec2 pos = aPos * aScale - pivotOffset;
 
     float rad = radians(aRotation);
@@ -29,7 +30,7 @@ void main()
     rotatedPos.y = pos.x * sinR + pos.y * cosR;
 
     vec2 finalPos = rotatedPos + aTranslation;
-    gl_Position = uViewProjection * vec4(finalPos, 0.0, 1.0);
+    gl_Position = uViewProjection * vec4(finalPos, aZIndex, 1.0);
 
     vColor = aInstanceColor;
     vLocalPos = aPos; // -0.5 → 0.5

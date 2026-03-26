@@ -22,6 +22,7 @@ class ShapeRenderer {
         glm::vec2 scale;
         glm::vec4 color;
         int shape_type;
+        float z_index;
     };
 
     struct Pipeline {
@@ -33,9 +34,10 @@ class ShapeRenderer {
         OrthographicCamera* camera{nullptr};
     };
 
-    enum ShapeType {
+    enum class ShapeType {
         Rectangle,
-        Eclipse
+        Ellipse,
+        Line
     };
 
     std::unique_ptr<Pipeline> pipeline{nullptr};
@@ -49,14 +51,15 @@ private:
     bool create_quad_dynamic_buffers();
 
     void setup_buffers();
-    void draw_shape(Rect rect, Color color, Vector2 origin={0.0, 0.0}, float rotation=0.0f, ShapeType type= Rectangle);
+    void draw_shape(Rect rect, Color color, Vector2 origin={0.0, 0.0}, float rotation=0.0f, ShapeType type= ShapeType::Rectangle, float z_index=0.0f);
 
 public:
     void flush();
     void begin();
     void end();
-    void draw_rect(Rect rect, Color color, Vector2 origin={0.0, 0.0}, float rotation=0.0f);
-    void draw_eclipse(Ellipse ellipse, Color color);
+    void draw_rect(Rect rect, Color color, Vector2 origin={0.0, 0.0}, float rotation=0.0f, float z_index = 0.0f);
+    void draw_eclipse(Ellipse ellipse, Color color, float z_index= 0.0f);
+    void draw_line(Vector2 start, Vector2 end, float thickness, Color color, float z_index = 0.0f);
 };
 
 

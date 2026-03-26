@@ -24,6 +24,21 @@ void main()
         discard;
 
         FragColor = vec4(vColor.rgb, vColor.a * edge);
+    } else if (vShapeType == 2) // Line
+    {
+        // vLocalPos.y vai de -0.5 a 0.5
+        float dist = abs(vLocalPos.y);
+
+        float halfThickness = 0.5;
+
+        float aa = fwidth(dist);
+
+        float edge = smoothstep(halfThickness, halfThickness - aa, dist);
+
+        FragColor = vec4(vColor.rgb, vColor.a * edge);
+
+        if (dist > halfThickness)
+        discard;
     }
     else
     {

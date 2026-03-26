@@ -23,6 +23,7 @@ class SpriteBatch {
         glm::vec4 region;
         float tex_index;
         int flip{0};
+        float z_index{0.0f};
     };
 
     struct Pipeline {
@@ -57,16 +58,17 @@ public:
         Color color,
         Rect sourceRect=Rect(),
         bool flip_x = false,
-        bool flip_y = false
+        bool flip_y = false,
+        float z_index=0.0f
     );
 
-    void draw_texture(Texture2D *texture, Vector2 position);
+    void draw_texture(Texture2D *texture, Vector2 position, float z_index = 0.0f);
 
-    void draw_texture(Texture2D *texture, Vector2 position, Vector2 scale);
+    void draw_texture(Texture2D *texture, Vector2 position, Vector2 scale, float z_index = 0.0f);
 
-    void draw_texture(Texture2D *texture, Vector2 position, Vector2 scale, float rotation);
+    void draw_texture(Texture2D *texture, Vector2 position, Vector2 scale, float rotation, float z_index = 0.0f);
 
-    void draw_texture(Texture2D *texture, Vector2 position, Vector2 scale, float rotation, Color color);
+    void draw_texture(Texture2D *texture, Vector2 position, Vector2 scale, float rotation, Color color, float z_index = 0.0f);
 
     void flush() const;
 

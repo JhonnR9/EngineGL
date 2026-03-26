@@ -81,6 +81,10 @@ void App::init() {
         std::cerr << "Failed to initialize GLAD" << std::endl;
     }
 
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
+    glClearDepth(1.0);
+
     glfwSwapInterval(config.use_vsync);
 
     registry = std::make_unique<entt::registry>();
@@ -102,8 +106,10 @@ void App::game_loop() {
         float deltaTime = currentTime - lastTime;
         lastTime = currentTime;
 
-        glClear(GL_COLOR_BUFFER_BIT);
-        glClearColor(0.043f, 0.067, 0.090, 1.0f);
+        glClearColor(0.043f, 0.067f, 0.090f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+
 
         if (current_scene) {
             current_scene->update(deltaTime);

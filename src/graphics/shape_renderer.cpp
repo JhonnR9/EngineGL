@@ -90,6 +90,11 @@ bool ShapeRenderer::create_quad_dynamic_buffers() {
     glVertexAttribIPointer(6, 1,GL_INT, sizeof(QuadInstance), (void *) offsetof(QuadInstance, shape_type));
     glVertexAttribDivisor(6, 1);
 
+    // location = 7 ZIndex
+    glEnableVertexAttribArray(7);
+    glVertexAttribPointer(7, 1,GL_FLOAT,GL_FALSE, sizeof(QuadInstance), (void *) offsetof(QuadInstance, z_index));
+    glVertexAttribDivisor(7, 1);
+
     return pipeline->quad_ibo != 0;
 }
 
@@ -109,7 +114,7 @@ void ShapeRenderer::setup_buffers() {
 
 }
 
-void ShapeRenderer::draw_shape(Rect rect, Color color, Vector2 origin, float rotation, ShapeType type) {
+void ShapeRenderer::draw_shape(Rect rect, Color color, Vector2 origin, float rotation, ShapeType type, float z_index) {
     if (rect.width <= 0.0f || rect.height <= 0.0f) {
         return;
     }
@@ -136,7 +141,8 @@ void ShapeRenderer::draw_shape(Rect rect, Color color, Vector2 origin, float rot
     instance.color.b = color.b;
     instance.color.a = color.a;
 
-    instance.shape_type = type;
+    instance.shape_type = static_cast<int>(type);
+    instance.z_index = z_index;
 
     pipeline->quad_instances.push_back(instance);
 }
@@ -175,16 +181,41 @@ void ShapeRenderer::end() {
     }
 }
 
-void ShapeRenderer::draw_rect(Rect rect, Color color, Vector2 origin, float rotation) {
-    draw_shape(rect, color, origin, rotation, Rectangle);
+void ShapeRenderer::draw_rect(Rect rect, Color color, Vector2 origin, float rotation, float z_index) {
+    draw_shape(rect, color, origin, rotation, ShapeType::Rectangle, z_index);
 }
 
-void ShapeRenderer::draw_eclipse(Ellipse ellipse, Color color) {
+void ShapeRenderer::draw_eclipse(Ellipse ellipse, Color color, float z_index) {
     Rect rect;
     rect.x = ellipse.cx;
     rect.y = ellipse.cy;
     rect.width = ellipse.rx * 2.f;
     rect.height = ellipse.ry * 2.f;
 
-    draw_shape(rect, color, Vector2(0.5f, 0.5f), 0.0f, Eclipse);
+    draw_shape(rect, color, Vector2(0.5f, 0.5f), 0.0f, ShapeType::Ellipse, z_index);
+}
+
+void ShapeRenderer::draw_line(Vector2 start, Vector2 end, float thickness, Color color, float z_index) {
+    Vector2 dir;
+    dir.x = end.x - start.x;
+    dir.y = end.y - start.y;
+
+    float length = sqrt(dir.x * dir.x + dir.y * dir.y);
+
+    float angle = atan2(dir.y, dir.x);
+
+    Rect rect;
+    rect.x = start.x;
+    rect.y = start.y;
+    rect.width = length;
+    rect.height = thickness;
+
+    draw_shape(
+        rect,
+        color,
+        Vector2(0.0f, 0.5f),
+        glm::degrees(angle),
+        ShapeType::Line,
+        z_index
+    );
 }
