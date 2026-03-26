@@ -15,23 +15,44 @@ MyScene::MyScene(App &app, entt::registry &registry): Scene(app, registry), play
 }
 
 void MyScene::init() {
-    auto yuzuha = registry.create();
-
-    Transform yuzuha_transform;
-    yuzuha_transform.position = Vector2(100.f, 100.f);
-    yuzuha_transform.scale = Vector2(0.1f, 0.1f);
-
-    Sprite sprite;
-    sprite.texture_path = RESOURCE_PATH"/hutao.png";
-    sprite.flipped_x = true;
-
-    registry.emplace<Transform>(yuzuha, yuzuha_transform);
-    registry.emplace<Sprite>(yuzuha, sprite);
-
-    player_entity = yuzuha;
-
-    shape_renderer = registry.ctx().get<ShapeRenderer *>();
     main_camera = registry.ctx().get<OrthographicCamera *>();
+
+    auto player = registry.create();
+    Transform player_transform;
+    Color player_color;
+    Rect player_rect;
+    ZIndex player_z_index;
+
+    player_transform.position = Vector2(100.f, 100.f);
+    player_rect.width = 150.f;
+    player_rect.height = 150.f;
+    player_z_index.value = 1;
+
+    registry.emplace<Transform>(player, player_transform);
+    registry.emplace<Rect>(player, player_rect);
+    registry.emplace<ZIndex>(player, player_z_index);
+    registry.emplace<Color>(player, player_color);
+
+
+    auto wall = registry.create();
+    Transform box_transform;
+    Rect box_rect;
+    ZIndex box_z_index;
+    Color box_color;
+
+    box_z_index.value = .0f;
+    box_color.r = 0.0f;
+
+    box_rect.width = 500.f;
+    box_rect.height = 100.f;
+
+    registry.emplace<Rect>(wall, box_rect);
+    registry.emplace<ZIndex>(wall, box_z_index);
+    registry.emplace<Transform>(wall, box_transform);
+    registry.emplace<Color>(wall, box_color);
+
+    player_entity = player;
+
 }
 
 void MyScene::update(float delta) {
@@ -68,56 +89,7 @@ void MyScene::update(float delta) {
 }
 
 void MyScene::render(SpriteBatch &batch) {
-    shape_renderer->begin();
 
-    Rect rect;
-    rect.x = 200 + 120;
-    rect.y = 100;
-    rect.width = 500;
-    rect.height = 500;
-
-    Color c;
-    c.r = 1.0f, c.g = 1.0f, c.b = 1.0f, c.a = 1.0f;
-
-    shape_renderer->draw_rect(rect, c, Vector2::zero(), 0.0f, -1.f);
-
-    Color co;co.r = 1.0f, co.g = .0f, co.b = 1.0f, co.a = 1.0f;
-
-    Ellipse ellipse;
-    ellipse.cy = 500, ellipse.cx = 400, ellipse.rx = 200, ellipse.ry = 200;
-    shape_renderer->draw_eclipse(ellipse, co, 1.0f);
-
-
-    Vector2 center(0.0f, 0.0f);
-    float radius = 150.0f;
-    float thickness = 4.0f;
-
-    Color green;
-    green.r = 0.0f;
-    green.g = 1.0f;
-    green.b = 0.0f;
-    green.a = 1.0f;
-
-    const int sides = 5;
-    Vector2 points[sides];
-
-    for (int i = 0; i < sides; i++)
-    {
-        float angle = (2.0f * glm::pi<float>() * i) / sides;
-
-        points[i].x = center.x + cos(angle) * radius;
-        points[i].y = center.y + sin(angle) * radius;
-    }
-
-    for (int i = 0; i < sides; i++)
-    {
-        Vector2 a = points[i];
-        Vector2 b = points[(i + 1) % sides];
-
-        shape_renderer->draw_line(a, b, thickness, green, 1.0f);
-    }
-
-    shape_renderer->end();
 }
 
 

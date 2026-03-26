@@ -18,7 +18,6 @@ class MyScene final : public Scene {
     float player_speed{400};
     Vector2 direction;
     bool right{false}, left{false}, up{false}, down{false};
-    ShapeRenderer *shape_renderer{nullptr};
     OrthographicCamera* main_camera{nullptr};
     Vector2 position_cache{0.0f,0.0f};
     bool zoom_in = false;

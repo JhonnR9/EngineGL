@@ -14,6 +14,7 @@
 
 #include "glm/ext/matrix_clip_space.hpp"
 #include "systems/render_system.h"
+#include "systems/shape_renderer_system.h"
 
 App::~App() {
     glfwDestroyWindow(window);
@@ -93,10 +94,11 @@ void App::init() {
     shape_renderer = std::make_unique<ShapeRenderer>(get_main_camera());
 
 
-    systems.emplace_back(std::move(std::make_unique<RenderSystem>(*registry, *batch)));
-
     registry->ctx().emplace<ShapeRenderer*>(shape_renderer.get());
     registry->ctx().emplace<OrthographicCamera*>(get_main_camera());
+
+    systems.emplace_back(std::move(std::make_unique<RenderSystem>(*registry, *batch)));
+    systems.emplace_back(std::move(std::make_unique<ShapeRendererSystem>(*registry)));
 }
 
 void App::game_loop() {

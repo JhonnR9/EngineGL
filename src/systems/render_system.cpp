@@ -38,6 +38,9 @@ void RenderSystem::run(float dt) {
         if (!texture || texture->get_texture() == 0)
             continue;
 
+        auto z = registry.try_get<ZIndex>(entity);
+        float z_index = z ? z->value : 0.0f;
+
         batch.draw_texture(
             texture,
             transform.position,
@@ -47,9 +50,11 @@ void RenderSystem::run(float dt) {
             sprite.color,
             sprite.src_rect,
             sprite.flipped_x,
-            sprite.flipped_y
+            sprite.flipped_y,
+            z_index
         );
     }
 
     batch.end();
 }
+

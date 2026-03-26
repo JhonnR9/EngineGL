@@ -3,7 +3,7 @@ include(FetchContent)
 
 project(EngineGL VERSION 0.0.1)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(GLM_BUILD_LIBRARY OFF)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
@@ -39,6 +39,10 @@ add_executable(EngineGL
         src/graphics/shape_renderer.h
         src/graphics/orthographic_camera.cpp
         src/graphics/orthographic_camera.h
+        src/systems/shape_renderer_system.cpp
+        src/systems/shape_renderer_system.h
+        src/systems/collision_detection_system.cpp
+        src/systems/collision_detection_system.h
 )
 
 target_include_directories(EngineGL PRIVATE "src/vendor")
