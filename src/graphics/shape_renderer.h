@@ -27,7 +27,7 @@ class ShapeRenderer {
 
     struct Pipeline {
         GLuint vao{0}, quad_vbo{0}, quad_ebo{0}, quad_ibo{0};
-        unsigned int MAX_INSTANCES{4096};
+        unsigned int MAX_INSTANCES{4096*4};
         std::unique_ptr<Shader> shader;
         std::vector<QuadInstance> quad_instances;
         glm::mat4 projection{1.0f};

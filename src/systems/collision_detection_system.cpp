@@ -12,10 +12,46 @@
 #include <unordered_set>
 #include <mutex>
 #include <numeric>
+#include "graphics/shape_renderer.h"
+
+
+void CollisionDetectionSystem::draw_collider_debug(entt::entity entity) {
+
+    const auto &transform = registry.get<Transform>(entity);
+    const auto &collider = registry.get<BoxCollider2D>(entity);
+
+    Color color;
+    if (collider.is_colliding) {
+        color = Color(1.0f, 0.0f, 0.0f, 1.0f);
+    } else {
+        color = Color(0.0f, 1.0f, 0.0f, 1.0f);
+    }
+
+    float half_w = collider.width / 2.0f;
+    float half_h = collider.height / 2.0f;
+
+    float x = transform.position.x;
+    float y = transform.position.y;
+
+    // 4 cantos
+    Vector2 top_left = {x - half_w, y - half_h};
+    Vector2 top_right = {x + half_w, y - half_h};
+    Vector2 bottom_right = {x + half_w, y + half_h};
+    Vector2 bottom_left = {x - half_w, y + half_h};
+
+    float thickness = 1.0f;
+
+    // Desenha as 4 linhas da caixa
+    shape_renderer->draw_line(top_left, top_right, thickness, color, 10.0f);
+    shape_renderer->draw_line(top_right, bottom_right, thickness, color, 10.0f);
+    shape_renderer->draw_line(bottom_right, bottom_left, thickness, color, 10.0f);
+    shape_renderer->draw_line(bottom_left, top_left, thickness, color, 10.0f);
+}
 
 
 CollisionDetectionSystem::CollisionDetectionSystem(entt::registry &registry)
     : System(registry) {
+    shape_renderer = registry.ctx().get<ShapeRenderer *>();
 }
 
 // Calculates the grid cell (x, y) in which a position falls
@@ -28,8 +64,24 @@ std::pair<int, int> CollisionDetectionSystem::get_hash_grid_cell(const float x, 
 
 // Registers an entity into its corresponding spatial hash grid cell
 void CollisionDetectionSystem::register_entity_in_grid(const entt::entity entity, const Vector2 &position) {
-    const auto cell = get_hash_grid_cell(position.x, position.y);
-    hash_grid_cells[cell].push_back(entity);
+    const auto &collider = registry.get<BoxCollider2D>(entity);
+
+    float half_w = collider.width * 0.5f;
+    float half_h = collider.height * 0.5f;
+
+    float min_x = position.x - half_w;
+    float min_y = position.y - half_h;
+    float max_x = position.x + half_w;
+    float max_y = position.y + half_h;
+
+    auto min_cell = get_hash_grid_cell(min_x, min_y);
+    auto max_cell = get_hash_grid_cell(max_x, max_y);
+
+    for (int x = min_cell.first; x <= max_cell.first; x++) {
+        for (int y = min_cell.second; y <= max_cell.second; y++) {
+            hash_grid_cells[{x, y}].push_back(entity);
+        }
+    }
 }
 
 // Collects all nearby entities within a 3x3 grid neighborhood
@@ -162,6 +214,18 @@ void CollisionDetectionSystem::run(float dt) {
             collider_b.colliding_entities.insert(entity_a_id);
         }
     }
+
+   /* if (shape_renderer) {
+        shape_renderer->begin();
+
+        auto view = registry.view<BoxCollider2D, Transform>();
+        for (auto entity: view) {
+
+            draw_collider_debug(entity);
+        }
+
+        shape_renderer->end();
+    }*/
 }
 
 std::size_t CollisionDetectionSystem::EntityPairHash::operator()(

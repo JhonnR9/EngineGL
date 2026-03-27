@@ -13,6 +13,8 @@
 #include <glm/vec3.hpp>
 
 #include "glm/ext/matrix_clip_space.hpp"
+#include "systems/collision_detection_system.h"
+#include "systems/overlap_correction_system.h"
 #include "systems/render_system.h"
 #include "systems/shape_renderer_system.h"
 
@@ -97,8 +99,11 @@ void App::init() {
     registry->ctx().emplace<ShapeRenderer*>(shape_renderer.get());
     registry->ctx().emplace<OrthographicCamera*>(get_main_camera());
 
+    systems.emplace_back(std::move(std::make_unique<CollisionDetectionSystem>(*registry)));
+    systems.emplace_back(std::move(std::make_unique<OverlapCorrectionSystem>(*registry)));
     systems.emplace_back(std::move(std::make_unique<RenderSystem>(*registry, *batch)));
     systems.emplace_back(std::move(std::make_unique<ShapeRendererSystem>(*registry)));
+
 }
 
 void App::game_loop() {

@@ -11,48 +11,88 @@
 #include "main/app.h"
 
 
+void MyScene::spawn_box(entt::registry &registry, Vector2 pos, float w, float h, Color color, bool is_static ) {
+    auto entity = registry.create();
+
+    Transform transform;
+    transform.position = pos;
+
+    Rect rect;
+    rect.width = w;
+    rect.height = h;
+
+    BoxCollider2D collider;
+    collider.width = w;
+    collider.height = h;
+    collider.is_static = is_static;
+    collider.is_trigger = false;
+
+    ZIndex z;
+    z.value = 0.0f;
+
+    registry.emplace<Transform>(entity, transform);
+    registry.emplace<Rect>(entity, rect);
+    registry.emplace<BoxCollider2D>(entity, collider);
+    registry.emplace<Color>(entity, color);
+    registry.emplace<ZIndex>(entity, z);
+}
+
 MyScene::MyScene(App &app, entt::registry &registry): Scene(app, registry), player_entity() {
 }
 
 void MyScene::init() {
     main_camera = registry.ctx().get<OrthographicCamera *>();
 
-    auto player = registry.create();
-    Transform player_transform;
-    Color player_color;
-    Rect player_rect;
-    ZIndex player_z_index;
+    std::srand(static_cast<unsigned>(std::time(nullptr)));
 
-    player_transform.position = Vector2(100.f, 100.f);
-    player_rect.width = 150.f;
-    player_rect.height = 150.f;
-    player_z_index.value = 1;
+    // --- PLAYER ---
+    auto player = registry.create();
+    player_entity = player;
+
+    Transform player_transform;
+    player_transform.position = Vector2(0.f, 0.f);
+
+    BoxCollider2D player_collider;
+    player_collider.width = 100.f;
+    player_collider.height = 100.f;
+
+    Rect player_rect;
+    player_rect.width = 100.f;
+    player_rect.height = 100.f;
 
     registry.emplace<Transform>(player, player_transform);
     registry.emplace<Rect>(player, player_rect);
-    registry.emplace<ZIndex>(player, player_z_index);
-    registry.emplace<Color>(player, player_color);
+    registry.emplace<ZIndex>(player, ZIndex{1});
+    registry.emplace<Color>(player, Color{1, 0, 0, 1});
+    registry.emplace<BoxCollider2D>(player, player_collider);
 
 
-    auto wall = registry.create();
-    Transform box_transform;
-    Rect box_rect;
-    ZIndex box_z_index;
-    Color box_color;
+    // --- SPAWN MASSIVO ---
+    const int ENTITY_COUNT = 10000;
+    const float WORLD_SIZE = 8000.f;
 
-    box_z_index.value = .0f;
-    box_color.r = 0.0f;
+    for (int i = 0; i < ENTITY_COUNT; i++) {
+        float x = ((std::rand() / (float)RAND_MAX) * 2.f - 1.f) * WORLD_SIZE;
+        float y = ((std::rand() / (float)RAND_MAX) * 2.f - 1.f) * WORLD_SIZE;
 
-    box_rect.width = 500.f;
-    box_rect.height = 100.f;
+        float size = 20.f + (std::rand() / (float)RAND_MAX) * 60.f;
 
-    registry.emplace<Rect>(wall, box_rect);
-    registry.emplace<ZIndex>(wall, box_z_index);
-    registry.emplace<Transform>(wall, box_transform);
-    registry.emplace<Color>(wall, box_color);
+        float r = (std::rand() / (float)RAND_MAX);
+        float g = (std::rand() / (float)RAND_MAX);
+        float b = (std::rand() / (float)RAND_MAX);
 
-    player_entity = player;
+        spawn_box(
+            registry,
+            Vector2(x, y),
+            size,
+            size,
+            Color{r, g, b, 1.0f},
+            false
+        );
+    }
 
+    // --- ALGUNS OBJETOS GRANDES (opcional) ---
+   // spawn_box(registry, Vector2(-800.f, -800.f), 400.f, 400.f, Color{0.3f, 0.3f, 0.9f, 1});
 }
 
 void MyScene::update(float delta) {
@@ -89,7 +129,6 @@ void MyScene::update(float delta) {
 }
 
 void MyScene::render(SpriteBatch &batch) {
-
 }
 
 

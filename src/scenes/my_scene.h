@@ -25,7 +25,7 @@ class MyScene final : public Scene {
 
     float zoom = 1.0f;
     float zoom_speed = 1.5f;
-
+    void spawn_box(entt::registry& registry, Vector2 pos, float w, float h, Color color, bool is_static = true);
 
 public:
     MyScene(App &app, entt::registry &registry);

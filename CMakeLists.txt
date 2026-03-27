@@ -43,6 +43,8 @@ add_executable(EngineGL
         src/systems/shape_renderer_system.h
         src/systems/collision_detection_system.cpp
         src/systems/collision_detection_system.h
+        src/systems/overlap_correction_system.cpp
+        src/systems/overlap_correction_system.h
 )
 
 target_include_directories(EngineGL PRIVATE "src/vendor")
