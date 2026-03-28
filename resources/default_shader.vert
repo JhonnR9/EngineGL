@@ -2,7 +2,6 @@
 
 layout(location = 0) in vec2 aPos;
 layout(location = 1) in vec2 aTexCoord;
-
 layout(location = 3) in vec2 aTranslation;
 layout(location = 4) in vec2 aOrigin;
 layout(location = 5) in float aRotation;
@@ -12,12 +11,16 @@ layout(location = 8) in vec4 aRegion;
 layout(location = 9) in float aTexIndex;
 layout(location = 10) in int aFlip;
 layout(location = 11) in float aZIndex;
+layout(location = 12) in int aShapeType;
 
 uniform mat4 uViewProjection;
 
 out vec2 texCoord;
 out vec4 vColor;
+out vec2 vLocalPos;
 out float vTexIndex;
+flat out int vShapeType;
+out vec2 vScale;
 
 void main()
 {
@@ -49,5 +52,8 @@ void main()
     }
 
     vColor = aInstanceColor;
+    vLocalPos = aPos; // -0.5 → 0.5
     vTexIndex = aTexIndex;
+    vShapeType = aShapeType;
+    vScale = aScale;
 }

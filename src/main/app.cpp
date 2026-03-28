@@ -16,7 +16,8 @@
 #include "systems/collision_detection_system.h"
 #include "systems/overlap_correction_system.h"
 #include "systems/render_system.h"
-#include "systems/shape_renderer_system.h"
+
+
 
 App::~App() {
     glfwDestroyWindow(window);
@@ -84,25 +85,25 @@ void App::init() {
         std::cerr << "Failed to initialize GLAD" << std::endl;
     }
 
+
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
     glClearDepth(1.0);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     glfwSwapInterval(config.use_vsync);
 
     registry = std::make_unique<entt::registry>();
     main_camera = std::make_unique<OrthographicCamera>(VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
     batch = std::make_unique<SpriteBatch>(get_main_camera());
-    shape_renderer = std::make_unique<ShapeRenderer>(get_main_camera());
 
-
-    registry->ctx().emplace<ShapeRenderer*>(shape_renderer.get());
+    registry->ctx().emplace<SpriteBatch*>(batch.get());
     registry->ctx().emplace<OrthographicCamera*>(get_main_camera());
 
     systems.emplace_back(std::move(std::make_unique<CollisionDetectionSystem>(*registry)));
     systems.emplace_back(std::move(std::make_unique<OverlapCorrectionSystem>(*registry)));
     systems.emplace_back(std::move(std::make_unique<RenderSystem>(*registry, *batch)));
-    systems.emplace_back(std::move(std::make_unique<ShapeRendererSystem>(*registry)));
 
 }
 

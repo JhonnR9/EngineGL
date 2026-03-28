@@ -17,6 +17,7 @@ public:
     explicit Texture2D(const char *path);
 
     explicit Texture2D(const char *path, Vector2 &apply_scale);
+    explicit Texture2D(int width, int height, const unsigned char* data);
 
     ~Texture2D();
 

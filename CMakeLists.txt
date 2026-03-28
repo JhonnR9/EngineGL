@@ -17,12 +17,19 @@ add_definitions(-DRESOURCE_PATH="${RESOURCE_DIR}")
 FetchContent_Declare(
         glfw
         GIT_REPOSITORY https://github.com/glfw/glfw.git
-        GIT_TAG        3.3.8
+        GIT_TAG 3.3.8
 )
+
+FetchContent_Declare(
+        freetype
+        GIT_REPOSITORY https://gitlab.freedesktop.org/freetype/freetype.git
+        GIT_TAG VER-2-14-3
+)
+
 
 set(BUILD_SHARED_LIBS ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(glfw)
-
+FetchContent_MakeAvailable(freetype)
 
 add_executable(EngineGL
         src/main/main.cpp
@@ -32,19 +39,12 @@ add_executable(EngineGL
         src/graphics/sprite_batch.cpp
         src/scenes/scene.cpp
         src/scenes/my_scene.cpp
-        src/systems/system.h
         src/systems/render_system.cpp
-        src/systems/render_system.h
-        src/graphics/shape_renderer.cpp
-        src/graphics/shape_renderer.h
         src/graphics/orthographic_camera.cpp
-        src/graphics/orthographic_camera.h
-        src/systems/shape_renderer_system.cpp
-        src/systems/shape_renderer_system.h
         src/systems/collision_detection_system.cpp
-        src/systems/collision_detection_system.h
         src/systems/overlap_correction_system.cpp
-        src/systems/overlap_correction_system.h
+        src/graphics/font.cpp
+
 )
 
 target_include_directories(EngineGL PRIVATE "src/vendor")
@@ -60,5 +60,6 @@ target_link_libraries(EngineGL
         OpenGL::GL
         glm::glm
         glad
+        freetype
 )
 

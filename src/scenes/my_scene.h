@@ -10,8 +10,6 @@
 #include "../graphics/sprite_batch.h"
 #include "graphics/texture_2d.h"
 #include "entt/entt.hpp"
-#include "graphics/shape_renderer.h"
-
 
 class MyScene final : public Scene {
     entt::entity player_entity;
@@ -27,6 +25,9 @@ class MyScene final : public Scene {
     float zoom_speed = 1.5f;
     void spawn_box(entt::registry& registry, Vector2 pos, float w, float h, Color color, bool is_static = true);
 
+
+    std::unique_ptr<Font> font{nullptr};
+    std::unique_ptr<Texture2D> texture{nullptr};
 public:
     MyScene(App &app, entt::registry &registry);
 

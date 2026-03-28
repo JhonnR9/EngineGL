@@ -50,7 +50,7 @@ Texture2D::Texture2D(const char *path, Vector2 &apply_scale) {
 
     uint8_t* data = stbi_load(path, &original_width, &original_height, &channels, 4); // RGBA
     if (!data) {
-        std::cerr << "Failed to load texture" << std::endl;
+        std::cerr << "Failed to load texture \""<< path << "\"" << std::endl;
         texture = 0;
         width = height = 0;
         return;
@@ -83,6 +83,34 @@ Texture2D::Texture2D(const char *path, Vector2 &apply_scale) {
     delete[] resized_data;
     stbi_image_free(data);
 }
+
+Texture2D::Texture2D(int width, int height, const unsigned char *data) {
+    this->width = width;
+    this->height = height;
+
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    glTexImage2D(
+        GL_TEXTURE_2D,
+        0,
+        GL_RGBA,
+        width,
+        height,
+        0,
+        GL_RGBA,
+        GL_UNSIGNED_BYTE,
+        data
+    );
+
+}
+
 
 Texture2D::~Texture2D() {
     if (texture) {

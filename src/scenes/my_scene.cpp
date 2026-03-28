@@ -11,7 +11,7 @@
 #include "main/app.h"
 
 
-void MyScene::spawn_box(entt::registry &registry, Vector2 pos, float w, float h, Color color, bool is_static ) {
+void MyScene::spawn_box(entt::registry &registry, Vector2 pos, float w, float h, Color color, bool is_static) {
     auto entity = registry.create();
 
     Transform transform;
@@ -43,6 +43,8 @@ MyScene::MyScene(App &app, entt::registry &registry): Scene(app, registry), play
 void MyScene::init() {
     main_camera = registry.ctx().get<OrthographicCamera *>();
 
+    font = std::make_unique<Font>(RESOURCE_PATH"/Slumber Dog.ttf", 64);
+
     std::srand(static_cast<unsigned>(std::time(nullptr)));
 
     // --- PLAYER ---
@@ -68,31 +70,32 @@ void MyScene::init() {
 
 
     // --- SPAWN MASSIVO ---
-    const int ENTITY_COUNT = 10000;
-    const float WORLD_SIZE = 8000.f;
+    /* const int ENTITY_COUNT = 100;
+     const float WORLD_SIZE = 1000.f;
 
-    for (int i = 0; i < ENTITY_COUNT; i++) {
-        float x = ((std::rand() / (float)RAND_MAX) * 2.f - 1.f) * WORLD_SIZE;
-        float y = ((std::rand() / (float)RAND_MAX) * 2.f - 1.f) * WORLD_SIZE;
+     for (int i = 0; i < ENTITY_COUNT; i++) {
+         float x = ((std::rand() / (float) RAND_MAX) * 2.f - 1.f) * WORLD_SIZE;
+         float y = ((std::rand() / (float) RAND_MAX) * 2.f - 1.f) * WORLD_SIZE;
 
-        float size = 20.f + (std::rand() / (float)RAND_MAX) * 60.f;
+         float size = 20.f + (std::rand() / (float) RAND_MAX) * 60.f;
 
-        float r = (std::rand() / (float)RAND_MAX);
-        float g = (std::rand() / (float)RAND_MAX);
-        float b = (std::rand() / (float)RAND_MAX);
+         float r = (std::rand() / (float) RAND_MAX);
+         float g = (std::rand() / (float) RAND_MAX);
+         float b = (std::rand() / (float) RAND_MAX);
 
-        spawn_box(
-            registry,
-            Vector2(x, y),
-            size,
-            size,
-            Color{r, g, b, 1.0f},
-            false
-        );
-    }
+         spawn_box(
+             registry,
+             Vector2(x, y),
+             size,
+             size,
+             Color{r, g, b, 1.0f},
+             false
+         );
+     }*/
 
     // --- ALGUNS OBJETOS GRANDES (opcional) ---
-   // spawn_box(registry, Vector2(-800.f, -800.f), 400.f, 400.f, Color{0.3f, 0.3f, 0.9f, 1});
+    auto s =Vector2(0.02f, 0.02f);
+    texture = std::make_unique<Texture2D>(RESOURCE_PATH"/hutao.png", s);
 }
 
 void MyScene::update(float delta) {
@@ -129,6 +132,14 @@ void MyScene::update(float delta) {
 }
 
 void MyScene::render(SpriteBatch &batch) {
+    batch.begin();
+   // batch.draw_texture(texture.get(), position_cache);
+    //batch.draw_text(*font.get(), "Texto nao pro", Vector2::one(), 1.0f, Color{1.0f, 1.f, 0.f, 1.f}, 100);
+    batch.draw_line(Vector2::zero(), Vector2(400.f, 0.f), 2.f, Color{1.0f, 1.f, 0.f, 1.f}, 5.f);
+    Ellipse ellipse;
+    ellipse.rx = 50, ellipse.ry = 50;
+    batch.draw_eclipse(ellipse, Color{1.0f, 1.f, 0.f, 1.f}, 20.f);
+    batch.end();
 }
 
 

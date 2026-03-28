@@ -115,6 +115,10 @@ bool SpriteBatch::create_instance_buffer() {
     glVertexAttribPointer(11, 1, GL_FLOAT,GL_FALSE, sizeof(InstanceData), (void *) offsetof(InstanceData, z_index));
     glVertexAttribDivisor(11, 1);
 
+    glEnableVertexAttribArray(12);
+    glVertexAttribIPointer(12, 1,GL_INT, sizeof(InstanceData), (void *) offsetof(InstanceData, shape_type));
+    glVertexAttribDivisor(12, 1);
+
     return pipeline.instance_vbo != 0;
 }
 
@@ -215,6 +219,78 @@ void SpriteBatch::draw_texture(Texture2D *texture, Vector2 position, Vector2 sca
     pipeline.instances.push_back(instance);
 }
 
+void SpriteBatch::draw_shape(Rect rect, Color color, Vector2 origin, float rotation, ShapeType type, float z_index) {
+    if (rect.width <= 0.0f || rect.height <= 0.0f) {
+        return;
+    }
+
+    if (pipeline.instances.size() >= pipeline.MAX_INSTANCES) {
+        flush();
+    }
+
+    InstanceData instance;
+
+    instance.position.x = rect.x;
+    instance.position.y = rect.y;
+
+    instance.origin.x = origin.x;
+    instance.origin.y = origin.y;
+
+    instance.rotation = rotation;
+
+    instance.scale.x = rect.width;
+    instance.scale.y = rect.height;
+
+    instance.color.r = color.r;
+    instance.color.g = color.g;
+    instance.color.b = color.b;
+    instance.color.a = color.a;
+
+    instance.shape_type = static_cast<int>(type);
+    instance.z_index = z_index;
+
+    pipeline.instances.push_back(instance);
+}
+
+void SpriteBatch::draw_rect(Rect rect, Color color, Vector2 origin, float rotation, float z_index) {
+    draw_shape(rect, color, origin, rotation, ShapeType::Rectangle, z_index);
+}
+
+void SpriteBatch::draw_eclipse(Ellipse ellipse, Color color, float z_index) {
+    Rect rect;
+    rect.x = ellipse.cx;
+    rect.y = ellipse.cy;
+    rect.width = ellipse.rx * 2.f;
+    rect.height = ellipse.ry * 2.f;
+
+    draw_shape(rect, color, Vector2(0.5f, 0.5f), 0.0f, ShapeType::Ellipse, z_index);
+}
+
+void SpriteBatch::draw_line(Vector2 start, Vector2 end, float thickness, Color color, float z_index) {
+    Vector2 dir;
+    dir.x = end.x - start.x;
+    dir.y = end.y - start.y;
+
+    float length = sqrt(dir.x * dir.x + dir.y * dir.y);
+
+    float angle = atan2(dir.y, dir.x);
+
+    Rect rect;
+    rect.x = start.x;
+    rect.y = start.y;
+    rect.width = length;
+    rect.height = thickness;
+
+    draw_shape(
+        rect,
+        color,
+        Vector2(0.0f, 0.5f),
+        glm::degrees(angle),
+        ShapeType::Line,
+        z_index
+    );
+}
+
 void SpriteBatch::draw_texture(Texture2D *texture, Vector2 position, float z_index) {
     draw_texture(
         texture,
@@ -274,6 +350,47 @@ void SpriteBatch::draw_texture(Texture2D *texture, Vector2 position, Vector2 sca
         false,
         false,
         z_index);
+}
+
+void SpriteBatch::draw_text(Font &font, const std::string &text, Vector2 position, float scale,
+                            Color color, float z_index) {
+    float x = position.x;
+    float y = position.y;
+
+    for (char c: text) {
+        const Character &ch = font.characters.at(c);
+
+        float xpos = x + ch.bearing.x * scale;
+        float ypos = y - (ch.size.y - ch.bearing.y) * scale;
+
+        float w = ch.size.x * scale;
+        float h = ch.size.y * scale;
+
+        // converter UV → sourceRect
+        float texW = (float) font.atlas_texture->get_width();
+        float texH = (float) font.atlas_texture->get_height();
+
+        Rect src;
+        src.x = ch.uv_min.x * texW;
+        src.y = ch.uv_min.y * texH;
+        src.width = (ch.uv_max.x - ch.uv_min.x) * texW;
+        src.height = (ch.uv_max.y - ch.uv_min.y) * texH;
+
+        draw_texture(
+            font.atlas_texture.get(),
+            Vector2{xpos, ypos},
+            Vector2{w / src.width, h / src.height},
+            0.0f,
+            Vector2{0.0f, 0.0f},
+            color,
+            src,
+            false,
+            false,
+            z_index
+        );
+
+        x += (ch.advance >> 6) * scale;
+    }
 }
 
 

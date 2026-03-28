@@ -12,7 +12,7 @@
 #include <unordered_set>
 #include <mutex>
 #include <numeric>
-#include "graphics/shape_renderer.h"
+#include "graphics/sprite_batch.h"
 
 
 void CollisionDetectionSystem::draw_collider_debug(entt::entity entity) {
@@ -42,16 +42,16 @@ void CollisionDetectionSystem::draw_collider_debug(entt::entity entity) {
     float thickness = 1.0f;
 
     // Desenha as 4 linhas da caixa
-    shape_renderer->draw_line(top_left, top_right, thickness, color, 10.0f);
-    shape_renderer->draw_line(top_right, bottom_right, thickness, color, 10.0f);
-    shape_renderer->draw_line(bottom_right, bottom_left, thickness, color, 10.0f);
-    shape_renderer->draw_line(bottom_left, top_left, thickness, color, 10.0f);
+    batch->draw_line(top_left, top_right, thickness, color, 10.0f);
+    batch->draw_line(top_right, bottom_right, thickness, color, 10.0f);
+    batch->draw_line(bottom_right, bottom_left, thickness, color, 10.0f);
+    batch->draw_line(bottom_left, top_left, thickness, color, 10.0f);
 }
 
 
 CollisionDetectionSystem::CollisionDetectionSystem(entt::registry &registry)
     : System(registry) {
-    shape_renderer = registry.ctx().get<ShapeRenderer *>();
+    batch = registry.ctx().get<SpriteBatch *>();
 }
 
 // Calculates the grid cell (x, y) in which a position falls

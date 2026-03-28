@@ -8,7 +8,10 @@ out vec4 FragColor;
 
 void main()
 {
-    if (vShapeType == 1)
+    if (vShapeType == 0){
+        FragColor = vColor;
+        return;
+    } else if (vShapeType == 1)
     {
         vec2 p = vLocalPos * 2.0;
 
