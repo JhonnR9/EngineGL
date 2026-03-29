@@ -1,8 +1,6 @@
 #include "sprite_batch.h"
-
 #include <iostream>
 #include <glm/gtc/matrix_transform.hpp>
-
 #include "main/app.h"
 #include "utils/vector2.h"
 
@@ -21,6 +19,9 @@ SpriteBatch::SpriteBatch(OrthographicCamera *camera) {
 
 
     pipeline.camera = camera;
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
 void SpriteBatch::setup_buffers() {
@@ -163,6 +164,9 @@ void SpriteBatch::begin() {
     pipeline.instances.clear();
     pipeline.instances.reserve(pipeline.MAX_INSTANCES);
     pipeline.texture_slots.clear();
+
+    glClearColor(0.043f, 0.067f, 0.090f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
 }
 
 void SpriteBatch::draw_texture(Texture2D *texture, Vector2 position, Vector2 scale,

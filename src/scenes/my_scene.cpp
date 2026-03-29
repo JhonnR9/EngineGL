@@ -136,6 +136,4 @@ void MyScene::key_callback(int key, int scancode, int action, int mods) {
     direction.x = (right ? 1.f : 0.f) - (left ? 1.f : 0.f);
     direction.y = (down ? 1.f : 0.f) - (up ? 1.f : 0.f);
 
-    if (key == GLFW_KEY_UP) zoom_in = pressed;
-    if (key == GLFW_KEY_DOWN) zoom_out = pressed;
 }

@@ -7,7 +7,7 @@
 #include <memory>
 
 #include "scene.h"
-#include "../graphics/sprite_batch.h"
+#include "graphics/sprite_batch.h"
 #include "graphics/texture_2d.h"
 #include "entt/entt.hpp"
 

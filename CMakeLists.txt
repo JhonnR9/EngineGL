@@ -5,20 +5,14 @@ project(EngineGL VERSION 0.0.1)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(GLM_BUILD_LIBRARY OFF)
+set(GLM_BUILD_LIBRARY ON)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 
 find_package(OpenGL REQUIRED)
-add_subdirectory(src/vendor/glm)
 set(RESOURCE_DIR "${CMAKE_SOURCE_DIR}/resources")
 add_definitions(-DRESOURCE_PATH="${RESOURCE_DIR}")
 
-FetchContent_Declare(
-        glfw
-        GIT_REPOSITORY https://github.com/glfw/glfw.git
-        GIT_TAG 3.3.8
-)
 
 FetchContent_Declare(
         freetype
@@ -26,10 +20,8 @@ FetchContent_Declare(
         GIT_TAG VER-2-14-3
 )
 
-
-set(BUILD_SHARED_LIBS ON CACHE BOOL "" FORCE)
-FetchContent_MakeAvailable(glfw)
 FetchContent_MakeAvailable(freetype)
+add_compile_definitions(UNICODE _UNICODE)
 
 add_executable(EngineGL
         src/main/main.cpp
@@ -44,10 +36,14 @@ add_executable(EngineGL
         src/systems/collision_detection_system.cpp
         src/systems/overlap_correction_system.cpp
         src/graphics/font.cpp
+        src/platforms/window.cpp
+        src/platforms/win_32_window.cpp
+        src/platforms/win_32_window.h
 
 )
 
 target_include_directories(EngineGL PRIVATE "src/vendor")
+target_include_directories(EngineGL PRIVATE src/vendor/glm)
 target_compile_options(EngineGL PRIVATE -Wno-unused-value)
 
 add_library(glad STATIC src/vendor/glad/glad.c)
@@ -56,9 +52,7 @@ target_include_directories(EngineGL PRIVATE src)
 
 target_link_libraries(EngineGL
         PRIVATE
-        glfw
         OpenGL::GL
-        glm::glm
         glad
         freetype
 )
