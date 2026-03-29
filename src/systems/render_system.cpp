@@ -219,12 +219,9 @@ void RenderSystem::run(float dt) {
         int mapWidth = map->getMapData().width;
         int mapHeight = map->getMapData().height;
 
-        // ... dentro do seu loop de tilemap_view ...
-
-        // 1. Carregar as texturas usando o caminho COMPLETO (basePath + source)
         std::vector<Texture2D *> tilesetTextures;
         for (auto &tsData: map->getTilesets()) {
-            // IMPORTANTE: Use o basePath para o stbi_load encontrar o arquivo
+
             std::string fullPath = map->getBasePath() + "/" + tsData.imageSource;
             Texture2D *tex = get_texture(fullPath);
             tilesetTextures.push_back(tex);
@@ -241,11 +238,8 @@ void RenderSystem::run(float dt) {
                     continue;
                 }
 
-                // 2. Encontrar qual tileset esse tileId pertence
-                // (Para mapas com múltiplos tilesets, o tileId define qual usar baseado no firstGid)
-                // Por enquanto, vamos assumir o primeiro, mas corrigindo a referência:
                 const auto &tilesets = map->getTilesets();
-                int tsIdx = 0; // Se tiver mais de um, precisará checar o firstGid aqui
+                int tsIdx = 0;
 
                 const TSXReader::TilesetData &ts = tilesets[tsIdx];
                 Texture2D *texture = tilesetTextures[tsIdx];
