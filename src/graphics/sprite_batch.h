@@ -74,7 +74,7 @@ public:
 
     void draw_rect(Rect rect, Color color, Vector2 origin = {0.0, 0.0}, float rotation = 0.0f, float z_index = 0.0f);
 
-    void draw_eclipse(Ellipse ellipse, Color color, float z_index = 0.0f);
+    void draw_ellipse(Ellipse ellipse, Color color, float z_index = 0.0f);
 
     void draw_line(Vector2 start, Vector2 end, float thickness, Color color, float z_index = 0.0f);
 
@@ -94,9 +94,9 @@ public:
                    Color color,
                    float z_index);
 
-    void flush() const;
+    void flush();
 
-    void end() const;
+    void end();
 
 private:
     void setup_buffers();

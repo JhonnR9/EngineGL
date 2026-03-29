@@ -4,6 +4,7 @@
 #include <unordered_set>
 #include "utils/vector2.h"
 #include "entt/entt.hpp"
+#include "graphics/font.h"
 
 struct Color {
     float r{1.0f}, g{1.0f}, b{1.0f}, a{1.0f};
@@ -39,6 +40,21 @@ struct Sprite {
     bool flipped_x = false;
     bool flipped_y = false;
     Rect src_rect = Rect();
+};
+
+
+struct Label {
+    enum class TextAlign {
+        Left,
+        Center,
+        Right
+    };
+
+    std::string text;
+    Color color = {1.f, 1.f, 1.f, 1.f};
+    std::shared_ptr<Font> font = nullptr;
+    float font_size = 16; //px
+    TextAlign align = TextAlign::Left;
 };
 
 struct BoxCollider2D {

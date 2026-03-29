@@ -115,6 +115,7 @@ bool SpriteBatch::create_instance_buffer() {
     glVertexAttribPointer(11, 1, GL_FLOAT,GL_FALSE, sizeof(InstanceData), (void *) offsetof(InstanceData, z_index));
     glVertexAttribDivisor(11, 1);
 
+    // aShapyType (int)
     glEnableVertexAttribArray(12);
     glVertexAttribIPointer(12, 1,GL_INT, sizeof(InstanceData), (void *) offsetof(InstanceData, shape_type));
     glVertexAttribDivisor(12, 1);
@@ -160,6 +161,7 @@ void SpriteBatch::begin() {
 
     glBindVertexArray(pipeline.vao);
     pipeline.instances.clear();
+    pipeline.instances.reserve(pipeline.MAX_INSTANCES);
     pipeline.texture_slots.clear();
 }
 
@@ -170,15 +172,24 @@ void SpriteBatch::draw_texture(Texture2D *texture, Vector2 position, Vector2 sca
         flush();
     }
 
+    InstanceData instance{};
+
     auto it = std::find(pipeline.texture_slots.begin(), pipeline.texture_slots.end(), texture);
 
+    if (it == pipeline.texture_slots.end()) {
+        if (pipeline.texture_slots.size() >= pipeline.MAX_TEXTURE_SLOTS) {
+            flush();
+            pipeline.texture_slots.clear();
+        }
 
-    if (it == pipeline.texture_slots.end() && pipeline.texture_slots.size() >= pipeline.MAX_TEXTURE_SLOTS) {
-        flush();
-        pipeline.texture_slots.clear();
+        pipeline.texture_slots.push_back(texture);
+        instance.tex_index = pipeline.texture_slots.size() - 1;
+    } else {
+        instance.tex_index = it - pipeline.texture_slots.begin();
     }
 
-    it = std::find(pipeline.texture_slots.begin(), pipeline.texture_slots.end(), texture);
+
+
 
     float srcW = (sourceRect.width > 0) ? sourceRect.width : (float) texture->get_width();
     float srcH = (sourceRect.height > 0) ? sourceRect.height : (float) texture->get_height();
@@ -187,7 +198,6 @@ void SpriteBatch::draw_texture(Texture2D *texture, Vector2 position, Vector2 sca
     float pivotY = (origin.y / srcH) - 0.5f;
 
 
-    InstanceData instance;
     instance.position = glm::vec2(position.x, position.y);
     instance.origin = glm::vec2(pivotX, pivotY);
     instance.scale = glm::vec2(srcW * scale.x, srcH * scale.y);
@@ -209,12 +219,6 @@ void SpriteBatch::draw_texture(Texture2D *texture, Vector2 position, Vector2 sca
     instance.flip = (flip_x ? 1 : 0) | (flip_y ? 2 : 0);
     instance.z_index = z_index;
 
-    if (it != pipeline.texture_slots.end()) {
-        instance.tex_index = it - pipeline.texture_slots.begin();
-    } else {
-        pipeline.texture_slots.push_back(texture);
-        instance.tex_index = pipeline.texture_slots.size() - 1;
-    }
 
     pipeline.instances.push_back(instance);
 }
@@ -228,7 +232,7 @@ void SpriteBatch::draw_shape(Rect rect, Color color, Vector2 origin, float rotat
         flush();
     }
 
-    InstanceData instance;
+    InstanceData instance{};
 
     instance.position.x = rect.x;
     instance.position.y = rect.y;
@@ -256,7 +260,7 @@ void SpriteBatch::draw_rect(Rect rect, Color color, Vector2 origin, float rotati
     draw_shape(rect, color, origin, rotation, ShapeType::Rectangle, z_index);
 }
 
-void SpriteBatch::draw_eclipse(Ellipse ellipse, Color color, float z_index) {
+void SpriteBatch::draw_ellipse(Ellipse ellipse, Color color, float z_index) {
     Rect rect;
     rect.x = ellipse.cx;
     rect.y = ellipse.cy;
@@ -355,25 +359,25 @@ void SpriteBatch::draw_texture(Texture2D *texture, Vector2 position, Vector2 sca
 void SpriteBatch::draw_text(Font &font, const std::string &text, Vector2 position, float scale,
                             Color color, float z_index) {
     float x = position.x;
-    float y = position.y;
+
+    float baseline = position.y + font.get_ascent() * scale;
 
     for (char c: text) {
         const Character &ch = font.characters.at(c);
 
         float xpos = x + ch.bearing.x * scale;
-        float ypos = y - (ch.size.y - ch.bearing.y) * scale;
+        float ypos = baseline - ch.bearing.y * scale;
 
         float w = ch.size.x * scale;
         float h = ch.size.y * scale;
 
-        // converter UV → sourceRect
         float texW = (float) font.atlas_texture->get_width();
         float texH = (float) font.atlas_texture->get_height();
 
         Rect src;
         src.x = ch.uv_min.x * texW;
         src.y = ch.uv_min.y * texH;
-        src.width = (ch.uv_max.x - ch.uv_min.x) * texW;
+        src.width  = (ch.uv_max.x - ch.uv_min.x) * texW;
         src.height = (ch.uv_max.y - ch.uv_min.y) * texH;
 
         draw_texture(
@@ -389,17 +393,26 @@ void SpriteBatch::draw_text(Font &font, const std::string &text, Vector2 positio
             z_index
         );
 
-        x += (ch.advance >> 6) * scale;
+        x += ch.advance * scale;
     }
 }
 
 
-void SpriteBatch::flush() const {
+
+void SpriteBatch::flush() {
     end();
 }
 
-void SpriteBatch::end() const {
+void SpriteBatch::end() {
     if (pipeline.instances.empty()) return;
+
+    std::ranges::sort(pipeline.instances,
+                      [](const InstanceData &a, const InstanceData &b) {
+                          if (a.z_index == b.z_index)
+                              return a.tex_index < b.tex_index;
+                          return a.z_index < b.z_index;
+                      });
+
 
     pipeline.shader->use();
 
@@ -421,7 +434,6 @@ void SpriteBatch::end() const {
         pipeline.instances.size()
     );
 }
-
 
 SpriteBatch::~SpriteBatch() {
     glDeleteBuffers(1, &pipeline.vbo);

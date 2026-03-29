@@ -26,7 +26,7 @@ class MyScene final : public Scene {
     void spawn_box(entt::registry& registry, Vector2 pos, float w, float h, Color color, bool is_static = true);
 
 
-    std::unique_ptr<Font> font{nullptr};
+    std::shared_ptr<Font> font{nullptr};
     std::unique_ptr<Texture2D> texture{nullptr};
 public:
     MyScene(App &app, entt::registry &registry);

@@ -5,7 +5,6 @@
 #include "render_system.h"
 #include "graphics/sprite_batch.h"
 #include "graphics/texture_2d.h"
-
 #include "components/components.h"
 
 RenderSystem::RenderSystem(entt::registry &registry, SpriteBatch &batch)
@@ -94,7 +93,7 @@ void RenderSystem::run(float dt) {
         world_ellipse.rx = ellipse.rx * transform.scale.x;
         world_ellipse.ry = ellipse.ry * transform.scale.y;
 
-        batch.draw_eclipse(
+        batch.draw_ellipse(
             world_ellipse,
             color,
             z_index
@@ -125,6 +124,59 @@ void RenderSystem::run(float dt) {
             end,
             line.thickness * transform.scale.y,
             color,
+            z_index
+        );
+    }
+
+    auto label_view = registry.view<Transform, Label>();
+
+    for (auto entity : label_view) {
+        auto &transform = label_view.get<Transform>(entity);
+        auto &label = label_view.get<Label>(entity);
+
+        if (!label.font) {
+            continue;
+        }
+
+        auto z = registry.try_get<ZIndex>(entity);
+        float z_index = z ? z->value : 0.0f;
+
+        float scale = label.font_size / (float)label.font->get_font_size();
+
+        float pen_x = 0.0f;
+        float text_width = 0.0f;
+
+        for (char c : label.text) {
+            const Character &ch = label.font->characters.at(c);
+
+            float glyph_end = pen_x + ch.bearing.x * scale + ch.size.x * scale;
+            text_width = std::max(text_width, glyph_end);
+
+            pen_x += ch.advance * scale;
+        }
+
+        float x = transform.position.x;
+
+        switch (label.align) {
+            case Label::TextAlign::Center:
+                x -= text_width * 0.5f;
+                break;
+            case Label::TextAlign::Right:
+                x -= text_width;
+                break;
+            case Label::TextAlign::Left:
+            default:
+                break;
+        }
+
+        float y = transform.position.y;
+
+        batch.draw_text(
+            *label.font,
+            label.text,
+            Vector2{x, y},
+            scale,
+            label.color,
             z_index
         );
     }
