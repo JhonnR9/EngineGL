@@ -3,39 +3,12 @@
 //
 
 #include "my_scene.h"
-#include <iostream>
-#include <numbers>
-#include <cmath>
 #include <ctime>
 #include "utils/vector2.h"
 #include "main/app.h"
+#include "input/keyboard.h"
+#include "utils/tmx_reader.h"
 
-
-void MyScene::spawn_box(entt::registry &registry, Vector2 pos, float w, float h, Color color, bool is_static) {
-    auto entity = registry.create();
-
-    Transform transform;
-    transform.position = pos;
-
-    Rect rect;
-    rect.width = w;
-    rect.height = h;
-
-    BoxCollider2D collider;
-    collider.width = w;
-    collider.height = h;
-    collider.is_static = is_static;
-    collider.is_trigger = false;
-
-    ZIndex z;
-    z.value = 0.0f;
-
-    registry.emplace<Transform>(entity, transform);
-    registry.emplace<Rect>(entity, rect);
-    registry.emplace<BoxCollider2D>(entity, collider);
-    registry.emplace<Color>(entity, color);
-    registry.emplace<ZIndex>(entity, z);
-}
 
 MyScene::MyScene(App &app, entt::registry &registry): Scene(app, registry), player_entity() {
 }
@@ -44,6 +17,21 @@ void MyScene::init() {
     if (registry.ctx().contains<OrthographicCamera*>()) {
         main_camera = registry.ctx().get<OrthographicCamera*>();
     }
+
+    auto map = std::make_shared<TMXReader>(RESOURCE_PATH"/Tilemap/map.tmx");
+
+    auto tile_entity = registry.create();
+    Transform transform;
+    transform.position = Vector2(300, 200);
+
+    TileMapLayer tilemaplayer;
+    tilemaplayer.setMap(map);
+
+    if ( tilemaplayer.isValid()) {
+        tilemaplayer.setLayerIndex(0);
+    };
+    registry.emplace<Transform>(tile_entity, transform);
+    registry.emplace<TileMapLayer>(tile_entity, tilemaplayer);
 
     std::srand(static_cast<unsigned>(std::time(nullptr)));
 
@@ -88,37 +76,22 @@ void MyScene::init() {
 }
 
 void MyScene::update(float delta) {
+    if (delta > 0.05f) delta = 0.05f;
+
     auto &transform = registry.get<Transform>(player_entity);
-    float smooth = 2.0f;
-    float t = 1.0f - std::exp(-smooth * delta);
+
     if (direction.length() > 0) {
         direction.normalize();
-
         transform.position.x += direction.x * player_speed * delta;
         transform.position.y += direction.y * player_speed * delta;
-
-
-        if (transform.position != position_cache) {
-        }
-        position_cache = transform.position;
-    }
-    main_camera->set_position(
-        Vector2::lerp(main_camera->get_position(), transform.position, t)
-    );
-
-    if (zoom_in) {
-        zoom -= zoom_speed * delta;
-    }
-    if (zoom_out) {
-        zoom += zoom_speed * delta;
     }
 
-    if (zoom < 0.2f) zoom = 0.2f;
-    if (zoom > 5.0f) zoom = 5.0f;
+    main_camera->follow(transform.position, Vector2(app.VIRTUAL_WIDTH * 0.2f, app.VIRTUAL_HEIGHT * 0.2f), delta);
 
-
-    main_camera->set_zoom(zoom);
+    main_camera->apply_zoom(zoom_in, zoom_out, delta, zoom_speed);
 }
+
+
 
 void MyScene::render(SpriteBatch &batch) {
 
@@ -128,12 +101,15 @@ void MyScene::render(SpriteBatch &batch) {
 void MyScene::key_callback(int key, int scancode, int action, int mods) {
     bool pressed = action != 0;
 
-    if (key == 'W') up = pressed;
-    if (key == 'S') down = pressed;
-    if (key == 'A') left = pressed;
-    if (key == 'D') right = pressed;
+    if (key == Key::W) up = pressed;
+    if (key == Key::S) down = pressed;
+    if (key == Key::A) left = pressed;
+    if (key == Key::D) right = pressed;
 
     direction.x = (right ? 1.f : 0.f) - (left ? 1.f : 0.f);
     direction.y = (down ? 1.f : 0.f) - (up ? 1.f : 0.f);
 
+    // Zoom
+    if (key == Key::UP) zoom_in = pressed;   // UP arrow
+    if (key == Key::DOWN) zoom_out = pressed;  // DOWN arrow
 }

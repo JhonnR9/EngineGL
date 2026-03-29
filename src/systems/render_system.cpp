@@ -16,15 +16,17 @@ Texture2D *RenderSystem::get_texture(const std::string &path) {
         return it->second.get();
     }
     auto texture = std::make_unique<Texture2D>(path.c_str());
-    auto* ptr = texture.get();
+    auto *ptr = texture.get();
 
     texture_cache.emplace(path, std::move(texture));
     return ptr;
-
 }
 
 void RenderSystem::run(float dt) {
     batch.begin();
+
+    glClearColor(0.043f, 0.067f, 0.090f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
 
     auto texture_view = registry.view<Transform, Sprite>();
 
@@ -130,7 +132,7 @@ void RenderSystem::run(float dt) {
 
     auto label_view = registry.view<Transform, Label>();
 
-    for (auto entity : label_view) {
+    for (auto entity: label_view) {
         auto &transform = label_view.get<Transform>(entity);
         auto &label = label_view.get<Label>(entity);
 
@@ -141,12 +143,12 @@ void RenderSystem::run(float dt) {
         auto z = registry.try_get<ZIndex>(entity);
         float z_index = z ? z->value : 0.0f;
 
-        float scale = label.font_size / (float)label.font->get_font_size();
+        float scale = label.font_size / (float) label.font->get_font_size();
 
         float pen_x = 0.0f;
         float text_width = 0.0f;
 
-        for (char c : label.text) {
+        for (char c: label.text) {
             const Character &ch = label.font->characters.at(c);
 
             float glyph_end = pen_x + ch.bearing.x * scale + ch.size.x * scale;
@@ -181,6 +183,112 @@ void RenderSystem::run(float dt) {
         );
     }
 
+
+    auto tilemap_view = registry.view<TileMapLayer, Transform>();
+
+    for (auto entity: tilemap_view) {
+        auto &tilemapComp = tilemap_view.get<TileMapLayer>(entity);
+        auto &transform = tilemap_view.get<Transform>(entity);
+
+        if (!tilemapComp.isValid())
+            continue;
+
+        auto map = tilemapComp.getMap();
+        int layerIndex = tilemapComp.getLayerIndex();
+
+        std::string csv = map->getMapData().layerData;
+        if (csv.empty())
+            continue;
+
+
+        std::vector<int> tiles;
+        size_t start = 0;
+        while (start < csv.size()) {
+            size_t end = csv.find_first_of(",\n", start);
+            if (end == std::string::npos) end = csv.size();
+            std::string val = csv.substr(start, end - start);
+            if (val.find_first_not_of(" \t\n\r") == std::string::npos) {
+                start = end + 1;
+                continue;
+            }
+            int tileId = std::stoi(val);
+            tiles.push_back(tileId);
+            start = end + 1;
+        }
+
+        int mapWidth = map->getMapData().width;
+        int mapHeight = map->getMapData().height;
+
+        // ... dentro do seu loop de tilemap_view ...
+
+        // 1. Carregar as texturas usando o caminho COMPLETO (basePath + source)
+        std::vector<Texture2D *> tilesetTextures;
+        for (auto &tsData: map->getTilesets()) {
+            // IMPORTANTE: Use o basePath para o stbi_load encontrar o arquivo
+            std::string fullPath = map->getBasePath() + "/" + tsData.imageSource;
+            Texture2D *tex = get_texture(fullPath);
+            tilesetTextures.push_back(tex);
+        }
+
+        int tileIndex = 0;
+        for (int y = 0; y < mapHeight; ++y) {
+            for (int x = 0; x < mapWidth; ++x) {
+                if (tileIndex >= (int) tiles.size()) break;
+
+                int tileId = tiles[tileIndex];
+                if (tileId <= 0) {
+                    ++tileIndex;
+                    continue;
+                }
+
+                // 2. Encontrar qual tileset esse tileId pertence
+                // (Para mapas com múltiplos tilesets, o tileId define qual usar baseado no firstGid)
+                // Por enquanto, vamos assumir o primeiro, mas corrigindo a referência:
+                const auto &tilesets = map->getTilesets();
+                int tsIdx = 0; // Se tiver mais de um, precisará checar o firstGid aqui
+
+                const TSXReader::TilesetData &ts = tilesets[tsIdx];
+                Texture2D *texture = tilesetTextures[tsIdx];
+
+                if (!texture || texture->get_texture() == 0) {
+                    ++tileIndex;
+                    continue;
+                }
+
+                int tw = ts.tileWidth;
+                int th = ts.tileHeight;
+                int tilesPerRow = ts.imageWidth / tw;
+
+                int localId = tileId - 1;
+                int tx = localId % tilesPerRow;
+                int ty = localId / tilesPerRow;
+
+                Rect srcRect;
+                srcRect.x = (float) (tx * tw);
+                srcRect.y = (float) (ty * th);
+                srcRect.width = (float) tw;
+                srcRect.height = (float) th;
+
+                Vector2 position = {
+                    transform.position.x + (x * tw * transform.scale.x),
+                    transform.position.y + (y * th * transform.scale.y)
+                };
+
+                batch.draw_texture(
+                    texture,
+                    position,
+                    transform.scale,
+                    0.0f,
+                    Vector2(0.f, 0.f),
+                    Color(1.f, 1.f, 1.f, 1.f),
+                    srcRect,
+                    false, false, 0.0f
+                );
+
+                ++tileIndex;
+            }
+        }
+    }
+
     batch.end();
 }
-

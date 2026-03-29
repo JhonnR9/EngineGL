@@ -1,0 +1,41 @@
+{
+    "activeFile": "map.tmx",
+    "expandedProjectPaths": [
+    ],
+    "fileStates": {
+        "map.tmx": {
+            "scale": 1.5,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 124.66666666666666,
+                "y": 105.66666666666664
+            }
+        },
+        "textures.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        }
+    },
+    "last.exportedFilePath": "C:/Users/jhone/OneDrive/Imagens/Tilemap",
+    "last.imagePath": "C:/Users/jhone/OneDrive/Imagens/Tilemap",
+    "map.height": 10,
+    "map.lastUsedExportFilter": "Arquivos de mapa JSON (*.tmj *.json)",
+    "map.lastUsedFormat": "tmx",
+    "map.tileHeight": 24,
+    "map.tileWidth": 24,
+    "map.width": 10,
+    "openFiles": [
+        "textures.tsx",
+        "map.tmx"
+    ],
+    "project": "tile_project.tiled-project",
+    "recentFiles": [
+        "textures.tsx",
+        "map.tmx"
+    ],
+    "tileset.lastUsedFormat": "tsx",
+    "tileset.tileSize": {
+        "height": 24,
+        "width": 24
+    }
+}

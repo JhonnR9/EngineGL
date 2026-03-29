@@ -23,7 +23,7 @@ class MyScene final : public Scene {
 
     float zoom = 1.0f;
     float zoom_speed = 1.5f;
-    void spawn_box(entt::registry& registry, Vector2 pos, float w, float h, Color color, bool is_static = true);
+    float last_move_time{0.0f};
 
 
     std::shared_ptr<Font> font{nullptr};

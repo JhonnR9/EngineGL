@@ -165,8 +165,7 @@ void SpriteBatch::begin() {
     pipeline.instances.reserve(pipeline.MAX_INSTANCES);
     pipeline.texture_slots.clear();
 
-    glClearColor(0.043f, 0.067f, 0.090f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
+
 }
 
 void SpriteBatch::draw_texture(Texture2D *texture, Vector2 position, Vector2 scale,
@@ -219,6 +218,7 @@ void SpriteBatch::draw_texture(Texture2D *texture, Vector2 position, Vector2 sca
     instance.region.y = sourceRect.y / tex_h;
     instance.region.z = srcW / tex_w;
     instance.region.w = srcH / tex_h;
+
 
     instance.flip = (flip_x ? 1 : 0) | (flip_y ? 2 : 0);
     instance.z_index = z_index;

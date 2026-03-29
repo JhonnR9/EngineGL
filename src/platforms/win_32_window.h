@@ -6,17 +6,25 @@
 #include <functional>
 
 class Win32Window : public Window {
+    bool use_vsync = {false};
+
+public:
+    void useVsync(bool useVsync) override {
+        this->use_vsync = useVsync;
+    }
+
+private:
     HWND hwnd;
+    HDC hdc;
     HGLRC glContext;
     WindowSize size;
     bool running = false;
     std::function<void(int key, int scancode, int action, int mods)> keyCallback;
+    std::function<void(int width, int height)> resize_callback;
 
     static LRESULT CALLBACK StaticWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-    LRESULT WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-    void createGLContext();
-    void destroyGLContext();
+    LRESULT WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 public:
     Win32Window();
@@ -26,6 +34,10 @@ public:
     void update() override;
 
     bool shouldClose() const override;
+
+    void setResizeCallback(std::function<void(int width, int height)> callback) override {
+        this->resize_callback = callback;
+    }
 
     void close() override;
 

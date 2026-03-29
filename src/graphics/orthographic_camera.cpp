@@ -38,6 +38,50 @@ void OrthographicCamera::update_view() {
 
     view = glm::translate(view, glm::vec3(-position.x, -position.y, 0.0f));
 }
+void OrthographicCamera::follow(Vector2 target, Vector2 deadzone, float delta, float smooth) {
+    Vector2 camTarget = get_position();
+
+    float left   = position.x - deadzone.x / 2.0f;
+    float right  = position.x + deadzone.x / 2.0f;
+    float top    = position.y - deadzone.y / 2.0f;   // Y menor é topo
+    float bottom = position.y + deadzone.y / 2.0f;  // Y maior é fundo
+
+    bool outside = false;
+
+    // X
+    if (target.x < left) {
+        camTarget.x = target.x + deadzone.x / 2.0f;
+        outside = true;
+    } else if (target.x > right) {
+        camTarget.x = target.x - deadzone.x / 2.0f;
+        outside = true;
+    }
+
+    // Y
+    if (target.y < top) {
+        camTarget.y = target.y + deadzone.y / 2.0f;
+        outside = true;
+    } else if (target.y > bottom) {
+        camTarget.y = target.y - deadzone.y / 2.0f;
+        outside = true;
+    }
+
+    if (outside) {
+        position.x += (camTarget.x - position.x) * smooth * delta;
+        position.y += (camTarget.y - position.y) * smooth * delta;
+        dirty = true;
+    }
+}
+
+void OrthographicCamera::apply_zoom(bool zoom_in, bool zoom_out, float delta, float zoom_speed) {
+    if (zoom_in) zoom -= zoom_speed * delta;
+    if (zoom_out) zoom += zoom_speed * delta;
+
+    if (zoom < 0.2f) zoom = 0.2f;
+    if (zoom > 5.0f) zoom = 5.0f;
+
+    dirty = true;
+}
 
 
 glm::mat4 OrthographicCamera::get_view_projection() {

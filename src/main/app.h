@@ -60,14 +60,15 @@ public:
 
     void init();
 
-    void onKey(int key, int scancode, int action, int mods);
+    void on_key(int key, int scancode, int action, int mods);
+    void resize(int width, int height);
 
     SpriteBatch* get_sprite_batch() const {
         return batch.get();
     }
 
     void game_loop();
-    static void error_callback(int error, const char *description);
+
 };
 
 template<typename T>

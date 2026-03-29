@@ -53,7 +53,8 @@ public:
         dirty = true;
     }
 
-
+    void follow(Vector2 target, Vector2 deadzone, float delta, float smooth = 5.0f);
+    void apply_zoom(bool zoom_in, bool zoom_out, float delta, float zoom_speed = 1.0f);
     void update_view();
 
     glm::mat4 get_view_projection();

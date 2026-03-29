@@ -3,21 +3,26 @@
 #include <GL/GL.h>
 #include <wglext.h>
 #include <iostream>
+#include <thread>
 
-static void* GetAnyGLFuncAddress(const char* name) {
-    void* p = (void*)wglGetProcAddress(name);
-    if (!p || p == (void*)0x1 || p == (void*)0x2 || p == (void*)0x3 || p == (void*)-1) {
+static void *GetAnyGLFuncAddress(const char *name) {
+    void *p = (void *) wglGetProcAddress(name);
+    if (!p || p == (void *) 0x1 || p == (void *) 0x2 || p == (void *) 0x3 || p == (void *) -1) {
         HMODULE module = LoadLibraryA("opengl32.dll");
-        p = (void*)GetProcAddress(module, name);
+        p = (void *) GetProcAddress(module, name);
     }
     return p;
 }
 
-Win32Window::Win32Window() : hwnd(nullptr), glContext(nullptr), size{800, 600}, running(false) {}
+Win32Window::Win32Window() : hwnd(nullptr), hdc(nullptr), glContext(nullptr), size{800, 600} {
+}
 
-bool Win32Window::init(const char* title, int width, int height, bool fullscreen) {
+bool Win32Window::init(const char *title, int width, int height, bool fullscreen) {
     size.width = width;
     size.height = height;
+
+    std::string tempTitle(title);
+    std::wstring wideTitle(tempTitle.begin(), tempTitle.end());
 
     constexpr wchar_t CLASS_NAME[] = L"Win32OpenGLWindow";
 
@@ -25,19 +30,43 @@ bool Win32Window::init(const char* title, int width, int height, bool fullscreen
     wc.lpfnWndProc = StaticWindowProc;
     wc.hInstance = GetModuleHandle(nullptr);
     wc.lpszClassName = CLASS_NAME;
-    wc.cbWndExtra = sizeof(Win32Window*);
+    wc.cbWndExtra = sizeof(Win32Window *);
+    wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
 
     if (!RegisterClassW(&wc)) {
         std::cerr << "Failed to register window class!" << std::endl;
         return false;
     }
 
+    DWORD style;
+    DWORD exStyle = 0;
+    RECT rect = {0, 0, width, height};
+
+    if (fullscreen) {
+        style = WS_POPUP | WS_VISIBLE;
+
+        HMONITOR hmon = MonitorFromWindow(nullptr, MONITOR_DEFAULTTOPRIMARY);
+        MONITORINFO mi = {sizeof(mi)};
+        if (GetMonitorInfo(hmon, &mi)) {
+            rect = mi.rcMonitor;
+        }
+    } else {
+
+        style = WS_OVERLAPPEDWINDOW | WS_VISIBLE;
+
+        AdjustWindowRectEx(&rect, style, FALSE, exStyle);
+    }
+
+
     hwnd = CreateWindowExW(
-        0,
+        exStyle,
         CLASS_NAME,
-        std::wstring(title, title + strlen(title)).c_str(),
-        WS_OVERLAPPEDWINDOW | (fullscreen ? WS_POPUP : 0),
-        CW_USEDEFAULT, CW_USEDEFAULT, width, height,
+        wideTitle.c_str(),
+        style,
+        (fullscreen ? rect.left : CW_USEDEFAULT),
+        (fullscreen ? rect.top : CW_USEDEFAULT),
+        rect.right - rect.left,
+        rect.bottom - rect.top,
         nullptr, nullptr, GetModuleHandle(nullptr), this
     );
 
@@ -49,7 +78,7 @@ bool Win32Window::init(const char* title, int width, int height, bool fullscreen
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
 
-    HDC hdc = GetDC(hwnd);
+    hdc = GetDC(hwnd);
 
     PIXELFORMATDESCRIPTOR pfd = {};
     pfd.nSize = sizeof(PIXELFORMATDESCRIPTOR);
@@ -67,7 +96,7 @@ bool Win32Window::init(const char* title, int width, int height, bool fullscreen
     wglMakeCurrent(hdc, dummy);
 
     auto wglCreateContextAttribsARB =
-        static_cast<PFNWGLCREATECONTEXTATTRIBSARBPROC>(GetAnyGLFuncAddress("wglCreateContextAttribsARB"));
+            static_cast<PFNWGLCREATECONTEXTATTRIBSARBPROC>(GetAnyGLFuncAddress("wglCreateContextAttribsARB"));
 
     const int contextAttribs[] = {
         WGL_CONTEXT_MAJOR_VERSION_ARB, 3,
@@ -86,6 +115,15 @@ bool Win32Window::init(const char* title, int width, int height, bool fullscreen
         return false;
     }
 
+
+    typedef BOOL (WINAPI *PFNWGLSWAPINTERVALEXTPROC)(int interval);
+    PFNWGLSWAPINTERVALEXTPROC wglSwapIntervalEXT =
+            reinterpret_cast<PFNWGLSWAPINTERVALEXTPROC>(wglGetProcAddress("wglSwapIntervalEXT"));
+
+    if (wglSwapIntervalEXT) {
+        wglSwapIntervalEXT(use_vsync);
+    }
+
     running = true;
     return true;
 }
@@ -98,10 +136,9 @@ void Win32Window::update() {
         if (msg.message == WM_QUIT) running = false;
     }
 
+
     if (hwnd && glContext) {
-        HDC hdc = GetDC(hwnd);
         SwapBuffers(hdc);
-        ReleaseDC(hwnd, hdc);
     }
 }
 
@@ -110,6 +147,7 @@ bool Win32Window::shouldClose() const {
 }
 
 void Win32Window::close() {
+    ReleaseDC(hwnd, hdc);
     if (glContext) {
         wglMakeCurrent(NULL, NULL);
         wglDeleteContext(glContext);
@@ -123,22 +161,24 @@ void Win32Window::close() {
 }
 
 LRESULT CALLBACK Win32Window::StaticWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-    Win32Window* window = nullptr;
+    Win32Window *window = nullptr;
     if (uMsg == WM_NCCREATE) {
-        CREATESTRUCT* cs = reinterpret_cast<CREATESTRUCT*>(lParam);
-        window = static_cast<Win32Window*>(cs->lpCreateParams);
-        SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)window);
+        CREATESTRUCT *cs = reinterpret_cast<CREATESTRUCT *>(lParam);
+        window = static_cast<Win32Window *>(cs->lpCreateParams);
+        SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(window));
     } else {
-        window = reinterpret_cast<Win32Window*>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
+        window = reinterpret_cast<Win32Window *>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
     }
 
     if (window) return window->WindowProc(hwnd, uMsg, wParam, lParam);
+
     return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
 
 LRESULT Win32Window::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
         case WM_SIZE:
+            if (resize_callback) resize_callback(LOWORD(lParam), HIWORD(lParam));
             size.width = LOWORD(lParam);
             size.height = HIWORD(lParam);
             return 0;
@@ -155,7 +195,5 @@ LRESULT Win32Window::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
         default: {
             return DefWindowProc(hwnd, uMsg, wParam, lParam);
         }
-
     }
-
 }

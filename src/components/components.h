@@ -5,6 +5,7 @@
 #include "utils/vector2.h"
 #include "entt/entt.hpp"
 #include "graphics/font.h"
+#include "utils/tmx_reader.h"
 
 struct Color {
     float r{1.0f}, g{1.0f}, b{1.0f}, a{1.0f};
@@ -67,9 +68,36 @@ struct BoxCollider2D {
     std::unordered_set<entt::entity> colliding_entities;
 
     BoxCollider2D() = default;
-    BoxCollider2D(float width, float height, bool is_colliding, bool is_trigger, bool is_static, bool sync_size_with_sprite)
+
+    BoxCollider2D(float width, float height, bool is_colliding, bool is_trigger, bool is_static,
+                  bool sync_size_with_sprite)
         : width(width), height(height), is_colliding(is_colliding),
-          is_trigger(is_trigger), is_static(is_static), sync_size_with_sprite(sync_size_with_sprite) {}
+          is_trigger(is_trigger), is_static(is_static), sync_size_with_sprite(sync_size_with_sprite) {
+    }
 };
+
+struct TileMapLayer {
+private:
+    std::shared_ptr<TMXReader> map{nullptr};
+    int layerIndex{0};
+
+public:
+    TileMapLayer(std::shared_ptr<TMXReader> m = nullptr, int layer = 0)
+        : map(m), layerIndex(layer) {}
+
+    std::shared_ptr<TMXReader> getMap() const { return map; }
+    int getLayerIndex() const { return layerIndex; }
+
+    void setMap(std::shared_ptr<TMXReader> m) { map = m; }
+    void setLayerIndex(int layer) {
+        if (map && layer >= 0 && layer < static_cast<int>(map->getMapData().layerData.size()))
+            layerIndex = layer;
+        else
+            layerIndex = 0;
+    }
+
+    bool isValid() const { return map != nullptr; }
+};
+
 
 #endif //COMPONENTS_H

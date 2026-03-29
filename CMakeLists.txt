@@ -24,6 +24,7 @@ FetchContent_MakeAvailable(freetype)
 add_compile_definitions(UNICODE _UNICODE)
 
 add_executable(EngineGL
+        src/vendor/tinyxml2/tinyxml2.cpp
         src/main/main.cpp
         src/main/app.cpp
         src/graphics/shader.cpp
@@ -39,6 +40,12 @@ add_executable(EngineGL
         src/platforms/window.cpp
         src/platforms/win_32_window.cpp
         src/platforms/win_32_window.h
+        src/input/keyboard.h
+        src/utils/tmx_reader.cpp
+        src/utils/tmx_reader.h
+        src/utils/tsx_reader.cpp
+        src/utils/tsx_reader.h
+
 
 )
 
