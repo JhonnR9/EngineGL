@@ -37,7 +37,13 @@ public:
 
     void render(SpriteBatch &batch) override;
 
-    void key_callback(int key, int scancode, int action, int mods) override;
+    void on_key_event(int key, int scancode, int action, int mods) override;
+
+    void on_mouse_button_event(int button, int action, int x, int y) override;
+
+    void on_mouse_move_event(int x, int y) override;
+
+    void on_mouse_wheel_event(int delta) override;
 };
 
 

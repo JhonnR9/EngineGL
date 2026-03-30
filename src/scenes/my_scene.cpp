@@ -11,6 +11,7 @@
 
 
 MyScene::MyScene(App &app, entt::registry &registry): Scene(app, registry), player_entity() {
+
 }
 
 void MyScene::init() {
@@ -35,7 +36,6 @@ void MyScene::init() {
 
     std::srand(static_cast<unsigned>(std::time(nullptr)));
 
-    // --- PLAYER ---
     auto player = registry.create();
     player_entity = player;
 
@@ -57,7 +57,6 @@ void MyScene::init() {
     registry.emplace<Sprite>(player, player_sprite);
     registry.emplace<ZIndex>(player, ZIndex{0.0f});
 
-    // --- TEXT ---
     auto ui = registry.create();
     Transform label_transform;
     label_transform.position = Vector2(0.f, 0.f);
@@ -88,7 +87,6 @@ void MyScene::update(float delta) {
 
     main_camera->follow(transform.position, Vector2(app.VIRTUAL_WIDTH * 0.2f, app.VIRTUAL_HEIGHT * 0.2f), delta);
 
-    main_camera->apply_zoom(zoom_in, zoom_out, delta, zoom_speed);
 }
 
 
@@ -98,7 +96,7 @@ void MyScene::render(SpriteBatch &batch) {
 }
 
 
-void MyScene::key_callback(int key, int scancode, int action, int mods) {
+void MyScene::on_key_event(int key, int scancode, int action, int mods) {
     bool pressed = action != 0;
 
     if (key == Key::W) up = pressed;
@@ -109,7 +107,23 @@ void MyScene::key_callback(int key, int scancode, int action, int mods) {
     direction.x = (right ? 1.f : 0.f) - (left ? 1.f : 0.f);
     direction.y = (down ? 1.f : 0.f) - (up ? 1.f : 0.f);
 
-    // Zoom
-    if (key == Key::UP) zoom_in = pressed;   // UP arrow
-    if (key == Key::DOWN) zoom_out = pressed;  // DOWN arrow
+}
+
+void MyScene::on_mouse_button_event(int button, int action, int x, int y) {
+
+}
+
+void MyScene::on_mouse_move_event(int x, int y) {
+
+}
+
+void MyScene::on_mouse_wheel_event(int delta) {
+    zoom += delta * zoom_speed * 0.001f;
+
+    if (zoom < 0.2f) zoom = 0.2f;
+    if (zoom > 5.0f) zoom = 5.0f;
+
+    if (main_camera) {
+        main_camera->set_zoom(zoom);
+    }
 }

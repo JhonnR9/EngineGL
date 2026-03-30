@@ -51,7 +51,6 @@ add_executable(EngineGL
 
 target_include_directories(EngineGL PRIVATE "src/vendor")
 target_include_directories(EngineGL PRIVATE src/vendor/glm)
-target_compile_options(EngineGL PRIVATE -Wno-unused-value)
 
 add_library(glad STATIC src/vendor/glad/glad.c)
 target_include_directories(glad PUBLIC src/vendor/glad)

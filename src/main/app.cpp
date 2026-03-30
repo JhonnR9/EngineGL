@@ -27,11 +27,15 @@ void App::init() {
     window->setKeyCallback([this](int key, int scancode, int action, int mods) {
         this->on_key(key, scancode, action, mods);
     });
-    window->setResizeCallback([this](int width, int height) {
-        this->resize(width, height);
+    window->setResizeCallback([this](int width, int height) { this->on_resize(width, height); });
+    window->setMouseButtonCallback([this](int button, int action, int x, int y) {
+        this->on_mouse_button(button, action, x, y);
     });
+    window->setMouseMoveCallback([this](int x, int y) { this->on_mouse_move(x, y); });
+    window->setMouseWheelCallback([this](int wheel) { this->on_mouse_wheel(wheel); });
+
     auto currentSize = window->getSize();
-    this->resize(currentSize.width, currentSize.height);
+    this->on_resize(currentSize.width, currentSize.height);
 
     registry = std::make_unique<entt::registry>();
     main_camera = std::make_unique<OrthographicCamera>(VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
@@ -47,11 +51,11 @@ void App::init() {
 
 void App::on_key(int key, int scancode, int action, int mods) {
     if (current_scene) {
-        current_scene->key_callback(key, scancode, action, mods);
+        current_scene->on_key_event(key, scancode, action, mods);
     }
 }
 
-void App::resize(int width, int height) {
+void App::on_resize(int width, int height) {
     if (width == 0 || height == 0) return;
 
     float targetAspectRatio = (float) VIRTUAL_WIDTH / (float) VIRTUAL_HEIGHT;
@@ -72,6 +76,25 @@ void App::resize(int width, int height) {
     }
 
     glViewport(viewX, viewY, viewWidth, viewHeight);
+}
+
+
+void App::on_mouse_button(int button, int action, int x, int y) {
+    if (current_scene) {
+        current_scene->on_mouse_button_event(button, action, x, y);
+    }
+}
+
+void App::on_mouse_move(int x, int y) {
+    if (current_scene) {
+        current_scene->on_mouse_move_event(x, y);
+    }
+}
+
+void App::on_mouse_wheel(int delta) {
+    if (current_scene) {
+        current_scene->on_mouse_wheel_event(delta);
+    }
 }
 
 void App::game_loop() {

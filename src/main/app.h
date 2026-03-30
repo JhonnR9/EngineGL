@@ -7,15 +7,9 @@
 #include "systems/system.h"
 #include "platforms/window.h"
 
-struct WindowConfig {
-    bool is_fullscreen = false;
-    int windowed_width = 840;
-    int windowed_height = 480;
-    bool use_vsync = false;
-};
+
 
 class App {
-    WindowConfig config;
     std::unique_ptr<SpriteBatch> batch{nullptr};
     std::unique_ptr<Window> window{nullptr};
     std::unique_ptr<Scene> current_scene{nullptr};
@@ -48,9 +42,6 @@ public:
         return main_camera.get();
     }
 
-    int get_windowed_width() const { return config.windowed_width; }
-    int get_windowed_height() const { return config.windowed_height; }
-
     void setScene(std::unique_ptr<Scene> scene) {
         current_scene = std::move(scene);
         if (current_scene) {
@@ -61,7 +52,10 @@ public:
     void init();
 
     void on_key(int key, int scancode, int action, int mods);
-    void resize(int width, int height);
+    void on_resize(int width, int height);
+    void on_mouse_button(int button, int action, int x, int y);
+    void on_mouse_move(int x, int y);
+    void on_mouse_wheel(int delta);
 
     SpriteBatch* get_sprite_batch() const {
         return batch.get();

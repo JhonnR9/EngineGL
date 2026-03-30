@@ -43,8 +43,8 @@ void OrthographicCamera::follow(Vector2 target, Vector2 deadzone, float delta, f
 
     float left   = position.x - deadzone.x / 2.0f;
     float right  = position.x + deadzone.x / 2.0f;
-    float top    = position.y - deadzone.y / 2.0f;   // Y menor é topo
-    float bottom = position.y + deadzone.y / 2.0f;  // Y maior é fundo
+    float top    = position.y - deadzone.y / 2.0f;
+    float bottom = position.y + deadzone.y / 2.0f;
 
     bool outside = false;
 

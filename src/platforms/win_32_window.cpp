@@ -177,11 +177,15 @@ LRESULT CALLBACK Win32Window::StaticWindowProc(HWND hwnd, UINT uMsg, WPARAM wPar
 
 LRESULT Win32Window::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
-        case WM_SIZE:
-            if (resize_callback) resize_callback(LOWORD(lParam), HIWORD(lParam));
+        case WM_SIZE: {
+            if (this->callbacks.resize_callback) {
+                this->callbacks.resize_callback(LOWORD(lParam), HIWORD(lParam));
+            }
             size.width = LOWORD(lParam);
             size.height = HIWORD(lParam);
             return 0;
+        }
+
         case WM_CLOSE:
             close();
             return 0;
@@ -189,9 +193,64 @@ LRESULT Win32Window::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
             running = false;
             return 0;
         case WM_KEYDOWN:
-        case WM_KEYUP:
-            if (keyCallback) keyCallback(static_cast<int>(wParam), 0, uMsg == WM_KEYDOWN ? 1 : 0, 0);
+        case WM_KEYUP: {
+            int key = static_cast<int>(wParam);
+            int scancode = (lParam >> 16) & 0xFF;
+            int action = (uMsg == WM_KEYDOWN) ? 1 : 0;
+
+            int mods = 0;
+            if (GetKeyState(VK_SHIFT) & 0x8000)   mods |= SHIFT_FLAG;
+            if (GetKeyState(VK_CONTROL) & 0x8000) mods |= CTRL_FLAG;
+            if (GetKeyState(VK_MENU) & 0x8000)    mods |= ALT_FLAG;
+
+            if (this->callbacks.keyCallback) {
+                this->callbacks.keyCallback(key, scancode, action, mods);
+            }
+
             return 0;
+        }
+
+        case WM_MOUSEMOVE: {
+            int x = LOWORD(lParam);
+            int y = HIWORD(lParam);
+
+            if (this->callbacks.mouseMoveCallback)
+                this->callbacks.mouseMoveCallback(x, y);
+
+            return 0;
+        }
+
+        case WM_LBUTTONDOWN:
+        case WM_LBUTTONUP: {
+            int x = LOWORD(lParam);
+            int y = HIWORD(lParam);
+            int action = (uMsg == WM_LBUTTONDOWN) ? 1 : 0;
+
+            if (this->callbacks.mouseButtonCallback)
+                this->callbacks.mouseButtonCallback(0, action, x, y); // 0 = left button
+
+            return 0;
+        }
+        case WM_RBUTTONDOWN:
+        case WM_RBUTTONUP: {
+            int x = LOWORD(lParam);
+            int y = HIWORD(lParam);
+            int action = (uMsg == WM_RBUTTONDOWN) ? 1 : 0;
+
+            if (this->callbacks.mouseButtonCallback)
+                this->callbacks.mouseButtonCallback(1, action, x, y); // 1 = right button
+
+            return 0;
+        }
+
+        case WM_MOUSEWHEEL: {
+            int delta = GET_WHEEL_DELTA_WPARAM(wParam);
+
+            if (this->callbacks.mouseWheelCallback)
+                this->callbacks.mouseWheelCallback(delta);
+
+            return 0;
+        }
         default: {
             return DefWindowProc(hwnd, uMsg, wParam, lParam);
         }

@@ -23,7 +23,11 @@ public:
     virtual void update(float delta) = 0;
 
     virtual void render(SpriteBatch& batch) = 0;
-    virtual void key_callback( int key, int scancode, int action, int mods)=0;
+    virtual void on_key_event( int key, int scancode, int action, int mods)=0;
+    virtual void on_mouse_button_event(int button, int action, int x, int y)=0;
+    virtual void on_mouse_move_event(int x, int y) =0;
+    virtual void on_mouse_wheel_event(int delta)=0;
+    virtual void on_resize(int width, int height){}
 
 };
 
