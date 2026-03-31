@@ -3,8 +3,6 @@
 //
 
 #include "app.h"
-#include <iostream>
-#include <fstream>
 #include "systems/collision_detection_system.h"
 #include "systems/overlap_correction_system.h"
 #include "systems/render_system.h"
@@ -14,9 +12,6 @@
 using Clock = std::chrono::high_resolution_clock;
 using TimePoint = std::chrono::time_point<Clock>;
 
-App::~App() {
-}
-
 void App::init() {
     window = std::make_unique<Win32Window>();
     window->useVsync(true);
@@ -24,21 +19,16 @@ void App::init() {
     if (!window->init("My game", 800, 600, false)) {
         throw std::runtime_error("Failed to create the window!");
     }
-    window->setKeyCallback([this](int key, int scancode, int action, int mods) {
-        this->on_key(key, scancode, action, mods);
-    });
-    window->setResizeCallback([this](int width, int height) { this->on_resize(width, height); });
-    window->setMouseButtonCallback([this](int button, int action, int x, int y) {
-        this->on_mouse_button(button, action, x, y);
-    });
-    window->setMouseMoveCallback([this](int x, int y) { this->on_mouse_move(x, y); });
-    window->setMouseWheelCallback([this](int wheel) { this->on_mouse_wheel(wheel); });
 
-    auto currentSize = window->getSize();
-    this->on_resize(currentSize.width, currentSize.height);
+    window->setEventCallback([this](const Event& e) {this->on_event(e);});
+
+    auto [width, height] = window->getSize();
+
+    const ResizeEvent event(width, height);
+    this->on_event(event);
 
     registry = std::make_unique<entt::registry>();
-    main_camera = std::make_unique<OrthographicCamera>(VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
+    main_camera = std::make_unique<OrthographicCamera>(virtual_width, virtual_height);
     batch = std::make_unique<SpriteBatch>(get_main_camera());
 
     registry->ctx().emplace<SpriteBatch *>(batch.get());
@@ -49,72 +39,58 @@ void App::init() {
     systems.emplace_back(std::move(std::make_unique<RenderSystem>(*registry, *batch)));
 }
 
-void App::on_key(int key, int scancode, int action, int mods) {
+void App::on_event(const Event &e) {
     if (current_scene) {
-        current_scene->on_key_event(key, scancode, action, mods);
-    }
-}
-
-void App::on_resize(int width, int height) {
-    if (width == 0 || height == 0) return;
-
-    float targetAspectRatio = (float) VIRTUAL_WIDTH / (float) VIRTUAL_HEIGHT;
-    float windowAspectRatio = (float) width / (float) height;
-
-    int viewWidth = width;
-    int viewHeight = height;
-    int viewX = 0;
-    int viewY = 0;
-
-
-    if (windowAspectRatio > targetAspectRatio) {
-        viewWidth = static_cast<int>(height * targetAspectRatio);
-        viewX = (width - viewWidth) / 2;
-    } else {
-        viewHeight = static_cast<int>(width / targetAspectRatio);
-        viewY = (height - viewHeight) / 2;
+        current_scene->on_event(e);
     }
 
-    glViewport(viewX, viewY, viewWidth, viewHeight);
-}
+    if (e.get_type() == EventType::Resize) {
+        const auto &ev = static_cast<const ResizeEvent &>(e);
+        if (ev.new_width == 0 || ev.new_height == 0) return;
+
+        int view_width = ev.new_width;
+        int view_height = ev.new_height;
+        int viewX = 0;
+        int viewY = 0;
+
+        const float target_aspect_ratio = static_cast<float>(virtual_width) / static_cast<float>(virtual_height);
+        const float window_aspect_ratio = static_cast<float>(view_width) / static_cast<float>(view_height);
 
 
-void App::on_mouse_button(int button, int action, int x, int y) {
-    if (current_scene) {
-        current_scene->on_mouse_button_event(button, action, x, y);
+        if (window_aspect_ratio > target_aspect_ratio) {
+            view_width = static_cast<int>(ev.new_height * target_aspect_ratio);
+            viewX = (ev.new_width - view_width) / 2;
+            viewY = 0;
+        } else {
+            view_height = static_cast<int>(ev.new_width / target_aspect_ratio);
+            viewX = 0;
+            viewY = (ev.new_height - view_height) / 2;
+        }
+
+
+        glViewport(viewX, viewY, view_width, view_height);
     }
-}
 
-void App::on_mouse_move(int x, int y) {
-    if (current_scene) {
-        current_scene->on_mouse_move_event(x, y);
-    }
-}
 
-void App::on_mouse_wheel(int delta) {
-    if (current_scene) {
-        current_scene->on_mouse_wheel_event(delta);
-    }
 }
 
 void App::game_loop() {
-    TimePoint lastTime = Clock::now();
+    TimePoint last_time = Clock::now();
     while (!window->shouldClose()) {
-        TimePoint currentTime = Clock::now();
-        std::chrono::duration<float> delta = currentTime - lastTime;
-        lastTime = currentTime;
+        TimePoint current_time = Clock::now();
+        std::chrono::duration<float> delta = current_time - last_time;
+        last_time = current_time;
 
-        float deltaTime = delta.count();
+        const float deltaTime = delta.count();
 
         if (current_scene) {
             current_scene->update(deltaTime);
             current_scene->render(*batch);
         }
 
-        for (auto &system: systems) {
+        for (const auto &system: systems) {
             system->run(deltaTime);
         }
-
 
         window->update();
     }

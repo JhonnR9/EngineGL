@@ -11,12 +11,11 @@
 
 
 MyScene::MyScene(App &app, entt::registry &registry): Scene(app, registry), player_entity() {
-
 }
 
 void MyScene::init() {
-    if (registry.ctx().contains<OrthographicCamera*>()) {
-        main_camera = registry.ctx().get<OrthographicCamera*>();
+    if (registry.ctx().contains<OrthographicCamera *>()) {
+        main_camera = registry.ctx().get<OrthographicCamera *>();
     }
 
     auto map = std::make_shared<TMXReader>(RESOURCE_PATH"/Tilemap/map.tmx");
@@ -28,7 +27,7 @@ void MyScene::init() {
     TileMapLayer tilemaplayer;
     tilemaplayer.setMap(map);
 
-    if ( tilemaplayer.isValid()) {
+    if (tilemaplayer.isValid()) {
         tilemaplayer.setLayerIndex(0);
     };
     registry.emplace<Transform>(tile_entity, transform);
@@ -66,12 +65,11 @@ void MyScene::init() {
     label.font = font;
     label.text = "Texto pro 123";
     label.font_size = 128;
-    label.color=Color{1, 1, 0, 1};
+    label.color = Color{1, 1, 0, 1};
 
     registry.emplace<Label>(ui, label);
     registry.emplace<Transform>(ui, label_transform);
     registry.emplace<ZIndex>(ui, ZIndex{1.f});
-
 }
 
 void MyScene::update(float delta) {
@@ -85,45 +83,47 @@ void MyScene::update(float delta) {
         transform.position.y += direction.y * player_speed * delta;
     }
 
-    main_camera->follow(transform.position, Vector2(app.VIRTUAL_WIDTH * 0.2f, app.VIRTUAL_HEIGHT * 0.2f), delta);
+    if (main_camera) {
+        main_camera->follow(transform.position, Vector2(app.virtual_width * 0.2f, app.virtual_height * 0.2f), delta);
 
+        const float current = main_camera->get_zoom();
+        const float target = zoom;
+        constexpr float smooth = 10.0f;
+
+        const float new_zoom = current + (target - current) * smooth * delta;
+        main_camera->set_zoom(new_zoom);
+    }
 }
-
 
 
 void MyScene::render(SpriteBatch &batch) {
-
 }
 
 
-void MyScene::on_key_event(int key, int scancode, int action, int mods) {
-    bool pressed = action != 0;
+void MyScene::on_event(const Event &e) {
+    switch (e.get_type()) {
+        case EventType::Key: {
+            auto &ev = static_cast<const KeyEvent &>(e);
 
-    if (key == Key::W) up = pressed;
-    if (key == Key::S) down = pressed;
-    if (key == Key::A) left = pressed;
-    if (key == Key::D) right = pressed;
+            const bool pressed = ev.action == KeyAction::Press;
 
-    direction.x = (right ? 1.f : 0.f) - (left ? 1.f : 0.f);
-    direction.y = (down ? 1.f : 0.f) - (up ? 1.f : 0.f);
+            if (ev.key == Key::W) up = pressed;
+            if (ev.key == Key::S) down = pressed;
+            if (ev.key == Key::A) left = pressed;
+            if (ev.key == Key::D) right = pressed;
 
-}
+            direction.x = (right ? 1.f : 0.f) - (left ? 1.f : 0.f);
+            direction.y = (down ? 1.f : 0.f) - (up ? 1.f : 0.f);
+            break;
+        }
+        case EventType::MouseWheel: {
+            auto &ev = static_cast<const MouseWheelEvent &>(e);
+            zoom += ev.delta * zoom_speed;
+            zoom = glm::clamp<float>(zoom, 0.2f, 5.0f);
+            zoom = glm::clamp<float>(zoom, 0.2, 5.0f);
 
-void MyScene::on_mouse_button_event(int button, int action, int x, int y) {
-
-}
-
-void MyScene::on_mouse_move_event(int x, int y) {
-
-}
-
-void MyScene::on_mouse_wheel_event(int delta) {
-    zoom += delta * zoom_speed * 0.001f;
-
-    if (zoom < 0.2f) zoom = 0.2f;
-    if (zoom > 5.0f) zoom = 5.0f;
-
-    if (main_camera) {
-        main_camera->set_zoom(zoom);
+            break;
+        }
+        default: break;
     }
 }

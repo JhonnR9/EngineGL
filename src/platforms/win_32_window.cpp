@@ -4,6 +4,8 @@
 #include <wglext.h>
 #include <iostream>
 #include <thread>
+#include <windowsx.h>
+
 
 static void *GetAnyGLFuncAddress(const char *name) {
     void *p = (void *) wglGetProcAddress(name);
@@ -51,7 +53,6 @@ bool Win32Window::init(const char *title, int width, int height, bool fullscreen
             rect = mi.rcMonitor;
         }
     } else {
-
         style = WS_OVERLAPPEDWINDOW | WS_VISIBLE;
 
         AdjustWindowRectEx(&rect, style, FALSE, exStyle);
@@ -175,14 +176,39 @@ LRESULT CALLBACK Win32Window::StaticWindowProc(HWND hwnd, UINT uMsg, WPARAM wPar
     return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
 
+static bool is_mouse_down(UINT msg) {
+    return msg == WM_LBUTTONDOWN ||
+           msg == WM_RBUTTONDOWN ||
+           msg == WM_MBUTTONDOWN;
+}
+
+static MouseButton get_mouse_button(UINT msg) {
+    switch (msg) {
+        case WM_LBUTTONDOWN:
+        case WM_LBUTTONUP: return MouseButton::Left;
+
+        case WM_RBUTTONDOWN:
+        case WM_RBUTTONUP: return MouseButton::Right;
+
+        case WM_MBUTTONDOWN:
+        case WM_MBUTTONUP: return MouseButton::Middle;
+
+        default: return MouseButton::Left;
+    }
+}
+
+
 LRESULT Win32Window::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
         case WM_SIZE: {
-            if (this->callbacks.resize_callback) {
-                this->callbacks.resize_callback(LOWORD(lParam), HIWORD(lParam));
+            size.width = GET_X_LPARAM(lParam);
+            size.height = GET_Y_LPARAM(lParam);
+
+            if (this->eventCallback) {
+                const ResizeEvent event(size.width, size.height);
+                this->eventCallback(event);
             }
-            size.width = LOWORD(lParam);
-            size.height = HIWORD(lParam);
+
             return 0;
         }
 
@@ -194,60 +220,66 @@ LRESULT Win32Window::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
             return 0;
         case WM_KEYDOWN:
         case WM_KEYUP: {
-            int key = static_cast<int>(wParam);
-            int scancode = (lParam >> 16) & 0xFF;
-            int action = (uMsg == WM_KEYDOWN) ? 1 : 0;
+            const int key = static_cast<int>(wParam);
+            const int scancode = (lParam >> 16) & 0xFF;
+
+            const KeyAction action = (uMsg == WM_KEYDOWN)? KeyAction::Press: KeyAction::Release;
 
             int mods = 0;
-            if (GetKeyState(VK_SHIFT) & 0x8000)   mods |= SHIFT_FLAG;
+            if (GetKeyState(VK_SHIFT) & 0x8000) mods |= SHIFT_FLAG;
             if (GetKeyState(VK_CONTROL) & 0x8000) mods |= CTRL_FLAG;
-            if (GetKeyState(VK_MENU) & 0x8000)    mods |= ALT_FLAG;
+            if (GetKeyState(VK_MENU) & 0x8000) mods |= ALT_FLAG;
 
-            if (this->callbacks.keyCallback) {
-                this->callbacks.keyCallback(key, scancode, action, mods);
+            if (this->eventCallback) {
+                const KeyEvent event(key, scancode, action, mods);
+                this->eventCallback(event);
             }
 
             return 0;
         }
 
         case WM_MOUSEMOVE: {
-            int x = LOWORD(lParam);
-            int y = HIWORD(lParam);
+            const int x = GET_X_LPARAM(lParam);
+            const int y = GET_Y_LPARAM(lParam);
 
-            if (this->callbacks.mouseMoveCallback)
-                this->callbacks.mouseMoveCallback(x, y);
+
+            if (this->eventCallback) {
+                const MouseMoveEvent event(x, y);
+                this->eventCallback(event);
+            }
+
 
             return 0;
         }
 
         case WM_LBUTTONDOWN:
-        case WM_LBUTTONUP: {
-            int x = LOWORD(lParam);
-            int y = HIWORD(lParam);
-            int action = (uMsg == WM_LBUTTONDOWN) ? 1 : 0;
-
-            if (this->callbacks.mouseButtonCallback)
-                this->callbacks.mouseButtonCallback(0, action, x, y); // 0 = left button
-
-            return 0;
-        }
+        case WM_LBUTTONUP:
         case WM_RBUTTONDOWN:
-        case WM_RBUTTONUP: {
-            int x = LOWORD(lParam);
-            int y = HIWORD(lParam);
-            int action = (uMsg == WM_RBUTTONDOWN) ? 1 : 0;
+        case WM_RBUTTONUP:
+        case WM_MBUTTONDOWN:
+        case WM_MBUTTONUP: {
+            const int x = GET_X_LPARAM(lParam);
+            const int y = GET_Y_LPARAM(lParam);
 
-            if (this->callbacks.mouseButtonCallback)
-                this->callbacks.mouseButtonCallback(1, action, x, y); // 1 = right button
+            const ButtonAction action = is_mouse_down(uMsg)? ButtonAction::Press : ButtonAction::Release;
+            const MouseButton button = get_mouse_button(uMsg);
+
+            if (this->eventCallback) {
+                const MouseButtonEvent event(button, action, x, y);
+                this->eventCallback(event);
+            }
 
             return 0;
         }
 
         case WM_MOUSEWHEEL: {
-            int delta = GET_WHEEL_DELTA_WPARAM(wParam);
+            int raw_delta = GET_WHEEL_DELTA_WPARAM(wParam);
+            float normalized = raw_delta / 120.0f;
 
-            if (this->callbacks.mouseWheelCallback)
-                this->callbacks.mouseWheelCallback(delta);
+            if (this->eventCallback) {
+                const MouseWheelEvent event(normalized);
+                this->eventCallback(event);
+            }
 
             return 0;
         }

@@ -45,6 +45,7 @@ add_executable(EngineGL
         src/utils/tmx_reader.h
         src/utils/tsx_reader.cpp
         src/utils/tsx_reader.h
+        src/events/event.h
 
 
 )

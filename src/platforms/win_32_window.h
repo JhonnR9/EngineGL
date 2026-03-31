@@ -26,15 +26,7 @@ private:
     WindowSize size;
     bool running = false;
 
-    struct Callbacks {
-        std::function<void(int key, int scancode, int action, int mods)> keyCallback;
-        std::function<void(int width, int height)> resize_callback;
-        std::function<void(int x, int y)> mouseMoveCallback;
-        std::function<void(int button, int action, int x, int y)> mouseButtonCallback;
-        std::function<void(int delta)>mouseWheelCallback;
-    };
-
-    Callbacks callbacks{};
+    std::function<void(const Event& e)>eventCallback;
 
     static LRESULT CALLBACK StaticWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
@@ -49,31 +41,16 @@ public:
 
     bool shouldClose() const override;
 
-    void setResizeCallback(std::function<void(int width, int height)> callback) override {
-        this->callbacks.resize_callback = callback;
-    }
-
     void close() override;
 
     WindowSize getSize() const override {
         return size;
     }
 
-    void setKeyCallback(std::function<void(int, int, int, int)> callback) override {
-        this->callbacks.keyCallback = callback;
+    void setEventCallback(std::function<void(const Event &e)> eventCallback) override {
+        this->eventCallback = eventCallback;
     }
 
-    void setMouseMoveCallback(std::function<void(int x, int y)> mouseMoveCallback) override {
-        this->callbacks.mouseMoveCallback = mouseMoveCallback;
-    }
-
-    void setMouseButtonCallback(std::function<void(int button, int action, int x, int y)> mouseButtonCallback) override {
-        this->callbacks.mouseButtonCallback = mouseButtonCallback;
-    }
-
-    void setMouseWheelCallback(std::function<void(int delta)> mouseWheelCallback) override {
-        this->callbacks.mouseWheelCallback = mouseWheelCallback;
-    }
 };
 
 #endif // WIN_32_WINDOW_H

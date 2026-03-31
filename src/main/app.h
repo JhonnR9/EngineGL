@@ -17,27 +17,22 @@ class App {
     std::unique_ptr<OrthographicCamera> main_camera{nullptr};
     std::unique_ptr<entt::registry> registry{nullptr};
 
-    App() = default;
-    ~App();
+
 
 public:
-    const float VIRTUAL_WIDTH = 1366.0f;
-    const float VIRTUAL_HEIGHT = 768.0f;
-
+    const float virtual_width {1366.0f};
+    const float virtual_height { 768.0f};
+    App() = default;
     App(const App &) = delete;
-
     App &operator=(const App &) = delete;
 
     template<typename T>
     void add_system();
+
     entt::registry &get_registry() const {
         return *registry;
     }
 
-    static App &getInstance() {
-        static App instance;
-        return instance;
-    }
     OrthographicCamera* get_main_camera() const {
         return main_camera.get();
     }
@@ -50,12 +45,7 @@ public:
     }
 
     void init();
-
-    void on_key(int key, int scancode, int action, int mods);
-    void on_resize(int width, int height);
-    void on_mouse_button(int button, int action, int x, int y);
-    void on_mouse_move(int x, int y);
-    void on_mouse_wheel(int delta);
+    void on_event(const Event &e);
 
     SpriteBatch* get_sprite_batch() const {
         return batch.get();

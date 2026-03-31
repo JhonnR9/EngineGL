@@ -18,13 +18,10 @@ class MyScene final : public Scene {
     bool right{false}, left{false}, up{false}, down{false};
     OrthographicCamera* main_camera{nullptr};
     Vector2 position_cache{0.0f,0.0f};
-    bool zoom_in = false;
-    bool zoom_out = false;
 
     float zoom = 1.0f;
-    float zoom_speed = 1.5f;
+    float zoom_speed = 0.2f;
     float last_move_time{0.0f};
-
 
     std::shared_ptr<Font> font{nullptr};
     std::unique_ptr<Texture2D> texture{nullptr};
@@ -36,14 +33,7 @@ public:
     void update(float delta) override;
 
     void render(SpriteBatch &batch) override;
-
-    void on_key_event(int key, int scancode, int action, int mods) override;
-
-    void on_mouse_button_event(int button, int action, int x, int y) override;
-
-    void on_mouse_move_event(int x, int y) override;
-
-    void on_mouse_wheel_event(int delta) override;
+    void on_event(const Event &e) override;
 };
 
 

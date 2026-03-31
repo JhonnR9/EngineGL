@@ -6,7 +6,7 @@
 #define WINDOW_H
 
 #include <functional>
-#include <cstdint>
+#include "events/event.h"
 
 struct WindowSize {
     int width;
@@ -27,12 +27,8 @@ public:
 
     virtual WindowSize getSize() const = 0;
 
-    virtual void setKeyCallback(std::function<void(int key, int scancode, int action, int mods)> callback) = 0;
-    virtual void setMouseMoveCallback(std::function<void(int x, int y)> mouseMoveCallback) = 0;
-    virtual void setMouseButtonCallback(std::function<void(int button, int action, int x, int y)> mouseButtonCallback) = 0;
-    virtual void setResizeCallback(std::function<void(int width, int height)> callback) =0;
-    virtual void setMouseWheelCallback(std::function<void(int delta)> mouseWheelCallback)=0;
     virtual void useVsync(bool useVsync)=0;
+    virtual void setEventCallback(std::function<void(const Event& e)>)=0;
 };
 
 
