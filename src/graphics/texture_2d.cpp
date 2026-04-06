@@ -113,9 +113,11 @@ Texture2D::Texture2D(const char *path, Vector2 &apply_scale) {
     stbi_image_free(data);
 }
 
-Texture2D::Texture2D(int width, int height, const unsigned char *data) {
+Texture2D::Texture2D(int width, int height, const unsigned char *data, TextureFilter filter) {
     this->width = width;
     this->height = height;
+
+    this->filter = filter;
 
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
@@ -137,6 +139,8 @@ Texture2D::Texture2D(int width, int height, const unsigned char *data) {
         GL_UNSIGNED_BYTE,
         data
     );
+
+    glGenerateMipmap(GL_TEXTURE_2D);
 }
 
 

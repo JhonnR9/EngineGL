@@ -14,11 +14,18 @@
 #include "platforms/window.h"
 #include "utils/vector2.h"
 
+enum class OriginMode {
+    CENTER,
+    TOP_LEFT,
+};
 class OrthographicCamera {
+
+
     glm::vec2 position = {0.0f, 0.0f};
     float rotation = 0.0f;
     float zoom = 1.0f;
     bool dirty{false};
+    OriginMode origin{OriginMode::CENTER};
 
     Size view_size{800, 600};
 
@@ -27,11 +34,20 @@ class OrthographicCamera {
 
 public:
     OrthographicCamera(Size view_size);
+
     Rect get_view_rect();
+
+    void set_view_rect(Rect view_rect);
+
     void update_projection();
 
     bool is_dirty() {
         return dirty;
+    }
+
+    void set_origin(const OriginMode origin) {
+        this->origin = origin;
+        dirty = true;
     }
 
     void set_position(Vector2 pos);
@@ -53,6 +69,7 @@ public:
         rotation = r;
         dirty = true;
     }
+
     Size get_view_size() {
         return view_size;
     }

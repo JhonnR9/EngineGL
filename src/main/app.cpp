@@ -20,7 +20,7 @@ App::~App() = default;
 void App::init() {
     window = std::make_unique<sfml_window>();
 
-    if (!window->init("My game", 800, 600, false)) {
+    if (!window->init("My game", 1366, 768, false)) {
         throw std::runtime_error("Failed to create the window!");
     }
 
@@ -41,9 +41,12 @@ void App::init() {
     registry->ctx().emplace<OrthographicCamera *>(get_main_camera());
     registry->ctx().emplace<AssetsManager *>(assets_manager.get());
 
+    auto render_system = std::make_unique<RenderSystem>(*registry.get());
+    render_system->set_ui_view_size(ui_viewport_size);
+
     systems.emplace_back(std::move(std::make_unique<CollisionDetectionSystem>(*registry)));
     systems.emplace_back(std::move(std::make_unique<OverlapCorrectionSystem>(*registry)));
-    systems.emplace_back(std::move(std::make_unique<RenderSystem>(*registry)));
+    systems.emplace_back(std::move(render_system));
 }
 
 void App::on_event(const Event &e) {

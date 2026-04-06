@@ -28,7 +28,6 @@ private:
     bool parse_tmx();
 
 public:
-    // O AssetsManager passa os bytes e ele mesmo como argumento extra
     TMXReader(const std::vector<char>& raw_data, const std::string& path, AssetsManager* am);
 
     MapData getMapData() const { return mapData; }

@@ -44,6 +44,12 @@ void RenderSystem::set_ui_view_size(Size ui_view_size) {
         return;
     }
     this->data.ui_viewport_size = ui_view_size;
+
+    Rect r{};
+    r.width = ui_view_size.width;
+    r.height = ui_view_size.height;
+    data.ui_camera->set_origin(OriginMode::TOP_LEFT);
+    data.ui_camera->set_view_rect(r);
 }
 
 void RenderSystem::run(float dt) {
@@ -240,18 +246,18 @@ void RenderSystem::render_tiles() {
     auto view = registry.view<TileMapLayer, Transform>();
     Rect camera_rect = data.camera->get_view_rect();
 
-    for (auto entity : view) {
-        auto& layer = view.get<TileMapLayer>(entity);
-        auto& transform = view.get<Transform>(entity);
+    for (auto entity: view) {
+        auto &layer = view.get<TileMapLayer>(entity);
+        auto &transform = view.get<Transform>(entity);
 
         Vector2 tile_size = Vector2(layer.tile_width, layer.tile_height);
 
         float margin_x = tile_size.x * 2.0f;
         float margin_y = tile_size.y * 2.0f;
 
-        camera_rect.x      -= margin_x;
-        camera_rect.y      -= margin_y;
-        camera_rect.width  += margin_x * 2;
+        camera_rect.x -= margin_x;
+        camera_rect.y -= margin_y;
+        camera_rect.width += margin_x * 2;
         camera_rect.height += margin_y * 2;
 
 
@@ -266,13 +272,12 @@ void RenderSystem::render_tiles() {
         auto texture = assets_manager->get_asset<Texture2D>(layer.atlas_path, TextureFilter::Nearest);
         if (!texture) continue;
 
-        for (auto& chunk : layer.chunks) {
-
+        for (auto &chunk: layer.chunks) {
             if (!rects_intersect(chunk.bounds, camera_rect)) continue;
 
             std::vector<InstanceData> visible_tiles;
-            for (auto& inst : chunk.instances) {
-                Rect inst_rect = { inst.position.x, inst.position.y, inst.scale.x, inst.scale.y };
+            for (auto &inst: chunk.instances) {
+                Rect inst_rect = {inst.position.x, inst.position.y, inst.scale.x, inst.scale.y};
                 if (rects_intersect(inst_rect, camera_rect)) {
                     visible_tiles.push_back(inst);
                 }
@@ -353,7 +358,7 @@ void RenderSystem::rebuild_tilemap_cache(TileMapLayer &layer, const Transform &t
 
             int cx = x / CHUNK_SIZE;
             int cy = y / CHUNK_SIZE;
-            auto& chunk = temp_map[{cx, cy}];
+            auto &chunk = temp_map[{cx, cy}];
 
             if (chunk.instances.empty()) {
                 chunk.bounds.x = transform.position.x + (cx * CHUNK_SIZE * ts.tileWidth * transform.scale.x);
@@ -389,7 +394,7 @@ void RenderSystem::rebuild_tilemap_cache(TileMapLayer &layer, const Transform &t
         }
     }
 
-    for (auto& pair : temp_map) {
+    for (auto &pair: temp_map) {
         layer.chunks.push_back(std::move(pair.second));
     }
 

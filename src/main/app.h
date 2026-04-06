@@ -21,7 +21,8 @@ class App {
 
     float current_fps{0.0f};
 public:
-    Size render_size{800, 600};
+    Size render_size{384, 316};
+    Size ui_viewport_size{384*1, 316*1};
     App();
     ~App();
 

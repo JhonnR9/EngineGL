@@ -20,7 +20,7 @@ class Texture2D : public Asset {
 
     GLuint texture;
     int width{0}, height{0};
-    TextureFilter filter = TextureFilter::Linear;
+    TextureFilter filter {TextureFilter::Linear};
 
 public:
     explicit Texture2D(const char *path, const TextureFilter filter = TextureFilter::Linear);
@@ -29,9 +29,9 @@ public:
 
     explicit Texture2D(const char *path, Vector2 &apply_scale);
 
-    explicit Texture2D(int width, int height, const unsigned char *data);
+    explicit Texture2D(int width, int height, const unsigned char *data, TextureFilter filter = TextureFilter::Linear);
 
-    ~Texture2D();
+    ~Texture2D() override;
 
     GLuint get_texture() const;
 

@@ -61,14 +61,14 @@ void MyScene::init() {
     auto ui_text = registry.create();
     text_entity = ui_text;
     Transform label_transform;
-    label_transform.position = Vector2(-380.f, -300.f);
+    label_transform.position = Vector2(-0.f, -0.f);
     font = std::make_shared<Font>(RESOURCE_PATH"/Coolvetica Rg.otf", 32);
 
     Label label{};
     label.font = font;
     label.text = "Texto pro 123";
     label.font_size = 32;
-    label.color = Color{1, 1, 0, 1};
+    label.color = Color{1, 1, 1, 1};
 
     registry.emplace<Label>(ui_text, label);
     registry.emplace<Transform>(ui_text, label_transform);

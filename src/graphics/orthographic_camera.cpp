@@ -21,6 +21,14 @@ Rect OrthographicCamera::get_view_rect() {
     return Rect{x, y, w, h};
 }
 
+void OrthographicCamera::set_view_rect(Rect view_rect) {
+    view_size.width = view_rect.width;
+    view_size.height = view_rect.height;
+    position.x = view_rect.x;
+    position.y = view_rect.y;
+    dirty = true;
+}
+
 void OrthographicCamera::update_projection() {
     float w = static_cast<float>(view_size.width);
     float h = static_cast<float>(view_size.height);
@@ -44,7 +52,12 @@ void OrthographicCamera::update_view() {
     float w = static_cast<float>(view_size.width);
     float h = static_cast<float>(view_size.height);
 
-    view = glm::translate(view, glm::vec3(w / 2.0f, h / 2.0f, 0.0f));
+    if (this->origin == OriginMode::CENTER) {
+        view = glm::translate(view, glm::vec3(w / 2.0f, h / 2.0f, 0.0f));
+    }else{
+        view = glm::translate(view, glm::vec3(0.0f, 0.0f, 0.0f));
+    }
+
 
     view = glm::scale(view, glm::vec3(zoom, zoom, 1.0f));
     view = glm::rotate(view, glm::radians(-rotation), glm::vec3(0, 0, 1));

@@ -31,7 +31,7 @@ class RenderSystem : public System {
         OrthographicCamera *camera{nullptr};
         std::unique_ptr<OrthographicCamera> ui_camera{nullptr};
         std::unique_ptr<Renderer2D> ui_renderer{nullptr};
-        Size ui_viewport_size{800, 600};
+        Size ui_viewport_size{1366, 768};
     };
 
 
