@@ -11,6 +11,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include "platforms/window.h"
 #include "utils/vector2.h"
 
 class OrthographicCamera {
@@ -19,15 +20,14 @@ class OrthographicCamera {
     float zoom = 1.0f;
     bool dirty{false};
 
-    float virtual_width = {800.0f};
-    float virtual_height = {600.0f};
+    Size view_size{800, 600};
 
     glm::mat4 projection = glm::mat4(1.0f);
     glm::mat4 view = glm::mat4(1.0f);
 
 public:
-    OrthographicCamera(float width, float height);
-
+    OrthographicCamera(Size view_size);
+    Rect get_view_rect();
     void update_projection();
 
     bool is_dirty() {
@@ -44,6 +44,7 @@ public:
         zoom = z;
         dirty = true;
     }
+
     float get_zoom() {
         return zoom;
     }
@@ -52,9 +53,14 @@ public:
         rotation = r;
         dirty = true;
     }
+    Size get_view_size() {
+        return view_size;
+    }
 
     void follow(Vector2 target, Vector2 deadzone, float delta, float smooth = 5.0f);
+
     void apply_zoom(bool zoom_in, bool zoom_out, float delta, float zoom_speed = 1.0f);
+
     void update_view();
 
     glm::mat4 get_view_projection();

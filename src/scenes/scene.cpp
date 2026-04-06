@@ -3,7 +3,7 @@
 //
 
 #include "scene.h"
-#include <../main/app.h>
+#include <main/app.h>
 
 Scene::Scene(App &app, entt::registry &registry) : app(app) , registry(registry) {
 

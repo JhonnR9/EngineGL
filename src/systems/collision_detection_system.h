@@ -12,7 +12,7 @@
 #include "entt/entt.hpp"
 #include "components/components.h"
 
-class SpriteBatch;
+class Renderer2D;
 
 class CollisionDetectionSystem final : public System {
     struct PairHash {
@@ -51,7 +51,7 @@ class CollisionDetectionSystem final : public System {
 
     void check_collision(const std::vector<entt::entity> &entities, CollisionResult &local_collision_result);
 
-    SpriteBatch* batch{nullptr};
+    std::unique_ptr<Renderer2D> renderer{nullptr};
     void draw_collider_debug(entt::entity entity);
 public:
     explicit CollisionDetectionSystem(entt::registry &registry);

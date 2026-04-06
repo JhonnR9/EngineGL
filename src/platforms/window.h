@@ -6,12 +6,10 @@
 #define WINDOW_H
 
 #include <functional>
+
+#include "components/components.h"
 #include "events/event.h"
 
-struct WindowSize {
-    int width;
-    int height;
-};
 
 class Window {
 public:
@@ -19,16 +17,18 @@ public:
 
     virtual bool init(const char *title, int width, int height, bool fullscreen) = 0;
 
-    virtual void update() = 0;
+    virtual void poll_events() = 0;
 
-    virtual bool shouldClose() const = 0;
+    virtual bool should_close() const = 0;
 
     virtual void close() = 0;
 
-    virtual WindowSize getSize() const = 0;
+    virtual Size get_size() const = 0;
 
-    virtual void useVsync(bool useVsync)=0;
-    virtual void setEventCallback(std::function<void(const Event& e)>)=0;
+    virtual void set_vsync(bool use_vsync)=0;
+    virtual void set_event_callback(std::function<void(const Event& e)>)=0;
+    virtual void swap_buffers()=0;
+
 };
 
 

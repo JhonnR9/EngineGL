@@ -4,22 +4,33 @@
 
 #include "orthographic_camera.h"
 
-OrthographicCamera::OrthographicCamera(const float width, const float height) {
-    virtual_width = width;
-    virtual_height = height;
+OrthographicCamera::OrthographicCamera(const Size view_size) {
+    this->view_size = view_size;
 
     update_projection();
     update_view();
 }
 
+Rect OrthographicCamera::get_view_rect() {
+    float w = static_cast<float>(view_size.width) / zoom;
+    float h = static_cast<float>(view_size.height) / zoom;
+
+    float x = position.x - w / 2.0f;
+    float y = position.y - h / 2.0f;
+
+    return Rect{x, y, w, h};
+}
+
 void OrthographicCamera::update_projection() {
+    float w = static_cast<float>(view_size.width);
+    float h = static_cast<float>(view_size.height);
     projection = glm::ortho(
         0.0f,
-        virtual_width,
-        virtual_height,
+        w,
+        h,
         0.0f,
-        -100.0f, // near
-        100.0f // far
+        -10.0f, // near
+        10.0f // far
     );
 }
 
@@ -30,20 +41,23 @@ void OrthographicCamera::set_position(Vector2 pos) {
 
 void OrthographicCamera::update_view() {
     view = glm::mat4(1.0f);
+    float w = static_cast<float>(view_size.width);
+    float h = static_cast<float>(view_size.height);
 
-    view = glm::translate(view, glm::vec3(virtual_width / 2.0f, virtual_height / 2.0f, 0.0f));
+    view = glm::translate(view, glm::vec3(w / 2.0f, h / 2.0f, 0.0f));
 
     view = glm::scale(view, glm::vec3(zoom, zoom, 1.0f));
     view = glm::rotate(view, glm::radians(-rotation), glm::vec3(0, 0, 1));
 
     view = glm::translate(view, glm::vec3(-position.x, -position.y, 0.0f));
 }
+
 void OrthographicCamera::follow(Vector2 target, Vector2 deadzone, float delta, float smooth) {
     Vector2 camTarget = get_position();
 
-    float left   = position.x - deadzone.x / 2.0f;
-    float right  = position.x + deadzone.x / 2.0f;
-    float top    = position.y - deadzone.y / 2.0f;
+    float left = position.x - deadzone.x / 2.0f;
+    float right = position.x + deadzone.x / 2.0f;
+    float top = position.y - deadzone.y / 2.0f;
     float bottom = position.y + deadzone.y / 2.0f;
 
     bool outside = false;

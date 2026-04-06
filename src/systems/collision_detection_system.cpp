@@ -41,17 +41,17 @@ void CollisionDetectionSystem::draw_collider_debug(entt::entity entity) {
 
     float thickness = 1.0f;
 
-    // Desenha as 4 linhas da caixa
+   /* // Desenha as 4 linhas da caixa
     batch->draw_line(top_left, top_right, thickness, color, 10.0f);
     batch->draw_line(top_right, bottom_right, thickness, color, 10.0f);
     batch->draw_line(bottom_right, bottom_left, thickness, color, 10.0f);
-    batch->draw_line(bottom_left, top_left, thickness, color, 10.0f);
+    batch->draw_line(bottom_left, top_left, thickness, color, 10.0f);*/
 }
 
 
 CollisionDetectionSystem::CollisionDetectionSystem(entt::registry &registry)
     : System(registry) {
-    batch = registry.ctx().get<SpriteBatch *>();
+
 }
 
 // Calculates the grid cell (x, y) in which a position falls

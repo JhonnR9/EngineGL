@@ -8,6 +8,7 @@
 #include "graphics/sprite_batch.h"
 #include "events/event.h"
 
+class AssetsManager;
 class App;
 
 class Scene {
@@ -23,8 +24,8 @@ public:
 
     virtual void update(float delta) = 0;
 
-    virtual void render(SpriteBatch& batch) = 0;
     virtual void on_event(const Event &e)=0;
+    virtual void load_assets(AssetsManager* manager)=0;
 
 };
 

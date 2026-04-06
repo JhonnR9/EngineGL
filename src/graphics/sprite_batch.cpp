@@ -3,8 +3,15 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include "main/app.h"
 #include "utils/vector2.h"
+#include "graphics/texture_2d.h"
+#include <glm/glm.hpp>
+#include "font.h"
+#include "components/components.h"
+#include "shader.h"
+#include "orthographic_camera.h"
+#include <algorithm>
 
-SpriteBatch::SpriteBatch(OrthographicCamera *camera) {
+Renderer2D::Renderer2D(OrthographicCamera *camera) {
     if (!create_default_shader()) {
         std::cerr << "Error creating default shader" << std::endl;
     }
@@ -24,7 +31,7 @@ SpriteBatch::SpriteBatch(OrthographicCamera *camera) {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
-void SpriteBatch::setup_buffers() {
+void Renderer2D::setup_buffers() {
     if (!create_vertex_array_object() || !create_vertex_buffer() || !create_index_buffer() ||
         !create_instance_buffer()
     ) {
@@ -33,13 +40,13 @@ void SpriteBatch::setup_buffers() {
     glBindVertexArray(0);
 }
 
-bool SpriteBatch::create_vertex_array_object() {
+bool Renderer2D::create_vertex_array_object() {
     glGenVertexArrays(1, &pipeline.vao);
     glBindVertexArray(pipeline.vao);
     return pipeline.vao != 0;
 }
 
-bool SpriteBatch::create_vertex_buffer() {
+bool Renderer2D::create_vertex_buffer() {
     constexpr float vertices[] = {
         -0.5f, -0.5f, 0.0f, 0.0f,
         0.5f, -0.5f, 1.0f, 0.0f,
@@ -60,7 +67,7 @@ bool SpriteBatch::create_vertex_buffer() {
     return pipeline.vbo != 0;
 }
 
-bool SpriteBatch::create_instance_buffer() {
+bool Renderer2D::create_instance_buffer() {
     glGenBuffers(1, &pipeline.instance_vbo);
     glBindBuffer(GL_ARRAY_BUFFER, pipeline.instance_vbo);
 
@@ -125,7 +132,7 @@ bool SpriteBatch::create_instance_buffer() {
 }
 
 
-bool SpriteBatch::create_index_buffer() {
+bool Renderer2D::create_index_buffer() {
     const int indices[] = {
         0, 1, 2,
         2, 3, 0
@@ -138,7 +145,7 @@ bool SpriteBatch::create_index_buffer() {
     return pipeline.ebo != 0;
 }
 
-bool SpriteBatch::create_default_shader() {
+bool Renderer2D::create_default_shader() {
     auto shader = std::make_unique<Shader>(
         SourcePath(RESOURCE_PATH"/default_shader.vert", RESOURCE_PATH"/default_shader.frag"));
 
@@ -151,7 +158,23 @@ bool SpriteBatch::create_default_shader() {
     return true;
 }
 
-void SpriteBatch::begin() {
+float Renderer2D::get_texture_index(Texture2D *texture) {
+    auto it = std::ranges::find(pipeline.texture_slots, texture);
+    if (it != pipeline.texture_slots.end())
+        return it - pipeline.texture_slots.begin();
+
+
+    if (pipeline.texture_slots.size() >= pipeline.MAX_TEXTURE_SLOTS) {
+        flush();
+    }
+
+
+    pipeline.texture_slots.push_back(texture);
+    return pipeline.texture_slots.size() - 1;
+}
+
+
+void Renderer2D::begin() {
     pipeline.shader->use();
 
     if (pipeline.camera) {
@@ -164,43 +187,25 @@ void SpriteBatch::begin() {
     pipeline.instances.clear();
     pipeline.instances.reserve(pipeline.MAX_INSTANCES);
     pipeline.texture_slots.clear();
-
-
 }
 
-void SpriteBatch::draw_texture(Texture2D *texture, Vector2 position, Vector2 scale,
-                               float rotation, Vector2 origin, Color color, Rect sourceRect, bool flip_x, bool flip_y,
-                               float z_index) {
+void Renderer2D::draw_texture(Texture2D *texture, Vector2 position, Vector2 scale,
+                              float rotation, Vector2 origin, Color color, Rect sourceRect, bool flip_x, bool flip_y,
+                              float z_index) {
+
     if (pipeline.instances.size() >= pipeline.MAX_INSTANCES) {
         flush();
     }
 
     InstanceData instance{};
 
-    auto it = std::find(pipeline.texture_slots.begin(), pipeline.texture_slots.end(), texture);
-
-    if (it == pipeline.texture_slots.end()) {
-        if (pipeline.texture_slots.size() >= pipeline.MAX_TEXTURE_SLOTS) {
-            flush();
-            pipeline.texture_slots.clear();
-        }
-
-        pipeline.texture_slots.push_back(texture);
-        instance.tex_index = pipeline.texture_slots.size() - 1;
-    } else {
-        instance.tex_index = it - pipeline.texture_slots.begin();
-    }
-
-
-
-
-    float srcW = (sourceRect.width > 0) ? sourceRect.width : (float) texture->get_width();
-    float srcH = (sourceRect.height > 0) ? sourceRect.height : (float) texture->get_height();
+    float srcW = (sourceRect.width > 0) ? sourceRect.width : static_cast<float>(texture->get_width());
+    float srcH = (sourceRect.height > 0) ? sourceRect.height : static_cast<float>(texture->get_height());
 
     float pivotX = (origin.x / srcW) - 0.5f;
     float pivotY = (origin.y / srcH) - 0.5f;
 
-
+    instance.tex_index = get_texture_index(texture);
     instance.position = glm::vec2(position.x, position.y);
     instance.origin = glm::vec2(pivotX, pivotY);
     instance.scale = glm::vec2(srcW * scale.x, srcH * scale.y);
@@ -211,8 +216,8 @@ void SpriteBatch::draw_texture(Texture2D *texture, Vector2 position, Vector2 sca
     instance.color[2] = color.b;
     instance.color[3] = color.a;
 
-    float tex_w = (float) texture->get_width();
-    float tex_h = (float) texture->get_height();
+    float tex_w = static_cast<float>(texture->get_width());
+    float tex_h = static_cast<float>(texture->get_height());
 
     instance.region.x = sourceRect.x / tex_w;
     instance.region.y = sourceRect.y / tex_h;
@@ -223,11 +228,33 @@ void SpriteBatch::draw_texture(Texture2D *texture, Vector2 position, Vector2 sca
     instance.flip = (flip_x ? 1 : 0) | (flip_y ? 2 : 0);
     instance.z_index = z_index;
 
-
     pipeline.instances.push_back(instance);
 }
+void Renderer2D::draw_instances(Texture2D *texture, const std::vector<InstanceData> &batch) {
+    if (batch.empty()) return;
 
-void SpriteBatch::draw_shape(Rect rect, Color color, Vector2 origin, float rotation, ShapeType type, float z_index) {
+    size_t offset = 0;
+    while (offset < batch.size()) {
+        if (pipeline.instances.size() >= pipeline.MAX_INSTANCES) {
+            flush();
+        }
+
+        float tex_index = get_texture_index(texture);
+
+        size_t space = pipeline.MAX_INSTANCES - pipeline.instances.size();
+        size_t count = std::min(batch.size() - offset, space);
+
+        for (size_t i = 0; i < count; ++i) {
+            InstanceData inst = batch[offset + i];
+            inst.tex_index = tex_index;
+            pipeline.instances.push_back(inst);
+        }
+        offset += count;
+    }
+}
+
+
+void Renderer2D::draw_shape(Rect rect, Color color, Vector2 origin, float rotation, ShapeType type, float z_index) {
     if (rect.width <= 0.0f || rect.height <= 0.0f) {
         return;
     }
@@ -260,11 +287,11 @@ void SpriteBatch::draw_shape(Rect rect, Color color, Vector2 origin, float rotat
     pipeline.instances.push_back(instance);
 }
 
-void SpriteBatch::draw_rect(Rect rect, Color color, Vector2 origin, float rotation, float z_index) {
+void Renderer2D::draw_rect(Rect rect, Color color, Vector2 origin, float rotation, float z_index) {
     draw_shape(rect, color, origin, rotation, ShapeType::Rectangle, z_index);
 }
 
-void SpriteBatch::draw_ellipse(Ellipse ellipse, Color color, float z_index) {
+void Renderer2D::draw_ellipse(Ellipse ellipse, Color color, float z_index) {
     Rect rect;
     rect.x = ellipse.cx;
     rect.y = ellipse.cy;
@@ -274,7 +301,7 @@ void SpriteBatch::draw_ellipse(Ellipse ellipse, Color color, float z_index) {
     draw_shape(rect, color, Vector2(0.5f, 0.5f), 0.0f, ShapeType::Ellipse, z_index);
 }
 
-void SpriteBatch::draw_line(Vector2 start, Vector2 end, float thickness, Color color, float z_index) {
+void Renderer2D::draw_line(Vector2 start, Vector2 end, float thickness, Color color, float z_index) {
     Vector2 dir;
     dir.x = end.x - start.x;
     dir.y = end.y - start.y;
@@ -299,7 +326,7 @@ void SpriteBatch::draw_line(Vector2 start, Vector2 end, float thickness, Color c
     );
 }
 
-void SpriteBatch::draw_texture(Texture2D *texture, Vector2 position, float z_index) {
+void Renderer2D::draw_texture(Texture2D *texture, Vector2 position, float z_index) {
     draw_texture(
         texture,
         position,
@@ -314,7 +341,7 @@ void SpriteBatch::draw_texture(Texture2D *texture, Vector2 position, float z_ind
     );
 }
 
-void SpriteBatch::draw_texture(Texture2D *texture, Vector2 position, Vector2 scale, float z_index) {
+void Renderer2D::draw_texture(Texture2D *texture, Vector2 position, Vector2 scale, float z_index) {
     draw_texture(
         texture,
         position,
@@ -329,7 +356,7 @@ void SpriteBatch::draw_texture(Texture2D *texture, Vector2 position, Vector2 sca
     );
 }
 
-void SpriteBatch::draw_texture(Texture2D *texture, Vector2 position, Vector2 scale, float rotation, float z_index) {
+void Renderer2D::draw_texture(Texture2D *texture, Vector2 position, Vector2 scale, float rotation, float z_index) {
     draw_texture(
         texture,
         position,
@@ -337,15 +364,15 @@ void SpriteBatch::draw_texture(Texture2D *texture, Vector2 position, Vector2 sca
         rotation,
         Vector2{0.0f, 0.0f},
         Color{1.0f, 1.0f, 1.0f, 1.0f},
-        Rect{0, 0, (float) texture->get_width(), (float) texture->get_height()},
+        Rect{0, 0, static_cast<float>(texture->get_width()), static_cast<float>(texture->get_height())},
         false,
         false,
         z_index
     );
 }
 
-void SpriteBatch::draw_texture(Texture2D *texture, Vector2 position, Vector2 scale, float rotation, Color color,
-                               float z_index) {
+void Renderer2D::draw_texture(Texture2D *texture, Vector2 position, Vector2 scale, float rotation, Color color,
+                              float z_index) {
     draw_texture(
         texture,
         position,
@@ -360,8 +387,8 @@ void SpriteBatch::draw_texture(Texture2D *texture, Vector2 position, Vector2 sca
         z_index);
 }
 
-void SpriteBatch::draw_text(Font &font, const std::string &text, Vector2 position, float scale,
-                            Color color, float z_index) {
+void Renderer2D::draw_text(Font &font, const std::string &text, Vector2 position, float scale,
+                           Color color, float z_index) {
     float x = position.x;
 
     float baseline = position.y + font.get_ascent() * scale;
@@ -381,7 +408,7 @@ void SpriteBatch::draw_text(Font &font, const std::string &text, Vector2 positio
         Rect src;
         src.x = ch.uv_min.x * texW;
         src.y = ch.uv_min.y * texH;
-        src.width  = (ch.uv_max.x - ch.uv_min.x) * texW;
+        src.width = (ch.uv_max.x - ch.uv_min.x) * texW;
         src.height = (ch.uv_max.y - ch.uv_min.y) * texH;
 
         draw_texture(
@@ -402,12 +429,13 @@ void SpriteBatch::draw_text(Font &font, const std::string &text, Vector2 positio
 }
 
 
-
-void SpriteBatch::flush() {
+void Renderer2D::flush() {
     end();
+    pipeline.instances.clear();
+    pipeline.texture_slots.clear();
 }
 
-void SpriteBatch::end() {
+void Renderer2D::end() {
     if (pipeline.instances.empty()) return;
 
     std::ranges::sort(pipeline.instances,
@@ -422,7 +450,6 @@ void SpriteBatch::end() {
 
 
     glBindBuffer(GL_ARRAY_BUFFER, pipeline.instance_vbo);
-    glBufferData(GL_ARRAY_BUFFER, pipeline.MAX_INSTANCES * sizeof(InstanceData), nullptr, GL_STREAM_DRAW);
     glBufferSubData(GL_ARRAY_BUFFER, 0, pipeline.instances.size() * sizeof(InstanceData), pipeline.instances.data());
 
     for (int i = 0; i < pipeline.texture_slots.size(); i++) {
@@ -439,7 +466,7 @@ void SpriteBatch::end() {
     );
 }
 
-SpriteBatch::~SpriteBatch() {
+Renderer2D::~Renderer2D() {
     glDeleteBuffers(1, &pipeline.vbo);
     glDeleteBuffers(1, &pipeline.ebo);
     glDeleteBuffers(1, &pipeline.instance_vbo);

@@ -6,7 +6,7 @@
 #define SHADER_H
 
 #include <string>
-#include "glad/glad.h"
+#include "glad.h"
 #include "glm/mat4x4.hpp"
 
 struct SourcePath {

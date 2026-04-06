@@ -1,46 +1,71 @@
 #include "tmx_reader.h"
 #include <iostream>
 #include <filesystem>
+
 namespace fs = std::filesystem;
 
-bool TMXReader::load_tmx(const char *path) {
+TMXReader::TMXReader(const std::vector<char>& raw_data, const std::string& path, AssetsManager* am)
+    : assets_manager(am) {
     fs::path tmxpath(path);
-
     basePath = tmxpath.parent_path().string();
-    doc = std::make_unique<tinyxml2::XMLDocument>();
-    tinyxml2::XMLError err = doc->LoadFile(path);
-    if (err != tinyxml2::XML_SUCCESS) {
-        std::cout << "Fail to load " << path << " !" << std::endl;
-        return false;
+
+    doc = std::make_shared<tinyxml2::XMLDocument>();
+    if (doc->Parse(raw_data.data(), raw_data.size()) == tinyxml2::XML_SUCCESS) {
+        parse_tmx();
     }
-    return true;
 }
 
 bool TMXReader::parse_tmx() {
     tinyxml2::XMLElement* map = doc->FirstChildElement("map");
-    if (!map) {
-        std::cerr << "Element <map> not found" << std::endl;
-        return false;
-    }
+    if (!map) return false;
 
     map->QueryIntAttribute("width", &mapData.width);
     map->QueryIntAttribute("height", &mapData.height);
 
+
     if (tinyxml2::XMLElement* layer = map->FirstChildElement("layer")) {
         mapData.layerName = layer->Attribute("name") ? layer->Attribute("name") : "";
+
         tinyxml2::XMLElement* data = layer->FirstChildElement("data");
-        mapData.layerData = data && data->GetText() ? data->GetText() : "";
+        mapData.layerData = (data && data->GetText()) ? data->GetText() : "";
     }
 
-    for (tinyxml2::XMLElement* ts = map->FirstChildElement("tileset"); ts; ts = ts->NextSiblingElement("tileset")) {
-        TSXReader::TilesetData tsData;
+    tilesets.clear();
 
+
+    for (tinyxml2::XMLElement* ts = map->FirstChildElement("tileset"); ts; ts = ts->NextSiblingElement("tileset")) {
+        TSXReader::TilesetData tsData{};
         const char* source = ts->Attribute("source");
-        if (source) {
-            fs::path tsxpath = fs::path(basePath) / fs::path(source);
-            TSXReader tsx(tsxpath.string().c_str());
-            tsData = tsx.getTilesetData();
-        } else {
+
+        if (source && assets_manager) {
+            std::string tsxPath = (fs::path(basePath) / fs::path(source)).string();
+
+            assets_manager->queue_file_load(tsxPath.c_str());
+
+            assets_manager->pool_works();
+
+
+            auto tsxAsset = assets_manager->get_asset<TSXReader>(tsxPath);
+
+            if (!tsxAsset) {
+                std::cerr << "[TMXReader] Falha ao carregar TSX: " << tsxPath << "\n";
+                return false;
+            }
+
+            tsData = tsxAsset->getTilesetData();
+
+
+            if (!tsData.imageSource.empty()) {
+                std::string imgPath = (fs::path(basePath) / fs::path(tsData.imageSource)).string();
+
+                assets_manager->queue_file_load(imgPath.c_str());
+
+
+                assets_manager->pool_works();
+            }
+        }
+        else {
+
             tsData.name = ts->Attribute("name") ? ts->Attribute("name") : "";
             ts->QueryIntAttribute("tilewidth", &tsData.tileWidth);
             ts->QueryIntAttribute("tileheight", &tsData.tileHeight);
@@ -49,6 +74,14 @@ bool TMXReader::parse_tmx() {
                 tsData.imageSource = image->Attribute("source") ? image->Attribute("source") : "";
                 image->QueryIntAttribute("width", &tsData.imageWidth);
                 image->QueryIntAttribute("height", &tsData.imageHeight);
+
+                if (assets_manager && !tsData.imageSource.empty()) {
+                    std::string imgPath = (fs::path(basePath) / fs::path(tsData.imageSource)).string();
+
+                    assets_manager->queue_file_load(imgPath.c_str());
+
+                    assets_manager->pool_works();
+                }
             }
         }
 
@@ -56,10 +89,4 @@ bool TMXReader::parse_tmx() {
     }
 
     return true;
-}
-
-TMXReader::TMXReader(const char *path) {
-    if (load_tmx(path)) {
-        parse_tmx();
-    }
 }

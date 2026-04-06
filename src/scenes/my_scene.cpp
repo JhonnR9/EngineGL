@@ -4,11 +4,19 @@
 
 #include "my_scene.h"
 #include <ctime>
+#include <filesystem>
+
 #include "utils/vector2.h"
 #include "main/app.h"
 #include "input/keyboard.h"
 #include "utils/tmx_reader.h"
+#include "graphics/orthographic_camera.h"
 
+
+void MyScene::load_assets(AssetsManager *manager) {
+    std::string path = RESOURCE_PATH"/player.png";
+    manager->queue_file_load(path.c_str());
+}
 
 MyScene::MyScene(App &app, entt::registry &registry): Scene(app, registry), player_entity() {
 }
@@ -18,29 +26,22 @@ void MyScene::init() {
         main_camera = registry.ctx().get<OrthographicCamera *>();
     }
 
-    auto map = std::make_shared<TMXReader>(RESOURCE_PATH"/Tilemap/map.tmx");
-
     auto tile_entity = registry.create();
     Transform transform;
     transform.position = Vector2(300, 200);
 
-    TileMapLayer tilemaplayer;
-    tilemaplayer.setMap(map);
+    TileMapLayer map_layer;
+    map_layer.map_path = (RESOURCE_PATH"/Tilemap/map.tmx");
+    map_layer.layer_index = (0);
 
-    if (tilemaplayer.isValid()) {
-        tilemaplayer.setLayerIndex(0);
-    };
     registry.emplace<Transform>(tile_entity, transform);
-    registry.emplace<TileMapLayer>(tile_entity, tilemaplayer);
-
-    std::srand(static_cast<unsigned>(std::time(nullptr)));
+    registry.emplace<TileMapLayer>(tile_entity, map_layer);
 
     auto player = registry.create();
     player_entity = player;
 
     Transform player_transform{};
     player_transform.position = Vector2(0.f, 0.f);
-    player_transform.scale = Vector2(.2f, .2f);
 
     BoxCollider2D player_collider{};
     player_collider.width = 100.f;
@@ -48,7 +49,8 @@ void MyScene::init() {
 
 
     Sprite player_sprite{};
-    player_sprite.texture_path = RESOURCE_PATH"/yuzuha.jpg";
+    player_sprite.texture_path = RESOURCE_PATH"/player.png";
+    player_sprite.filter = TextureFilter::Nearest;
 
     registry.emplace<Transform>(player, player_transform);
     registry.emplace<Color>(player, Color{1, 0, 0, 1});
@@ -56,20 +58,21 @@ void MyScene::init() {
     registry.emplace<Sprite>(player, player_sprite);
     registry.emplace<ZIndex>(player, ZIndex{0.0f});
 
-    auto ui = registry.create();
+    auto ui_text = registry.create();
+    text_entity = ui_text;
     Transform label_transform;
-    label_transform.position = Vector2(0.f, 0.f);
-    font = std::make_shared<Font>(RESOURCE_PATH"/Coolvetica Rg.otf", 128);
+    label_transform.position = Vector2(-380.f, -300.f);
+    font = std::make_shared<Font>(RESOURCE_PATH"/Coolvetica Rg.otf", 32);
 
     Label label{};
     label.font = font;
     label.text = "Texto pro 123";
-    label.font_size = 128;
+    label.font_size = 32;
     label.color = Color{1, 1, 0, 1};
 
-    registry.emplace<Label>(ui, label);
-    registry.emplace<Transform>(ui, label_transform);
-    registry.emplace<ZIndex>(ui, ZIndex{1.f});
+    registry.emplace<Label>(ui_text, label);
+    registry.emplace<Transform>(ui_text, label_transform);
+    registry.emplace<ZIndex>(ui_text, ZIndex{1.f});
 }
 
 void MyScene::update(float delta) {
@@ -83,8 +86,14 @@ void MyScene::update(float delta) {
         transform.position.y += direction.y * player_speed * delta;
     }
 
+    auto &label = registry.get<Label>(text_entity);
+    //label.text = app.get_current_fps();
+
     if (main_camera) {
-        main_camera->follow(transform.position, Vector2(app.virtual_width * 0.2f, app.virtual_height * 0.2f), delta);
+        Size size = main_camera->get_view_size();
+        float w = static_cast<float>(size.width);
+        float h = static_cast<float>(size.height);
+        main_camera->follow(transform.position, Vector2(w * 0.2f, h * 0.2f), delta);
 
         const float current = main_camera->get_zoom();
         const float target = zoom;
@@ -96,15 +105,10 @@ void MyScene::update(float delta) {
 }
 
 
-void MyScene::render(SpriteBatch &batch) {
-}
-
-
 void MyScene::on_event(const Event &e) {
     switch (e.get_type()) {
         case EventType::Key: {
             auto &ev = static_cast<const KeyEvent &>(e);
-
             const bool pressed = ev.action == KeyAction::Press;
 
             if (ev.key == Key::W) up = pressed;

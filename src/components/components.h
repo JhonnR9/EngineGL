@@ -5,25 +5,20 @@
 #include "utils/vector2.h"
 #include "entt/entt.hpp"
 #include "graphics/font.h"
-#include "utils/tmx_reader.h"
+#include "graphics/sprite_batch.h"
+#include "graphics/render_types.h"
 
-struct Color {
-    float r{1.0f}, g{1.0f}, b{1.0f}, a{1.0f};
+struct Size {
+    int width{0};
+    int height{0};
 };
 
-struct Rect {
-    float x{0}, y{0}, width{0.f}, height{0.f};
+struct SizeF {
+    float width{0.0f};
+    float height{0.0f};
 };
 
-struct Ellipse {
-    float cx{0}, cy{0}, rx{0}, ry{0};
-};
 
-struct Line {
-    Vector2 start;
-    Vector2 end;
-    float thickness;
-};
 
 struct ZIndex {
     float value = 0.0f;
@@ -41,6 +36,7 @@ struct Sprite {
     bool flipped_x = false;
     bool flipped_y = false;
     Rect src_rect = Rect();
+    TextureFilter filter{TextureFilter::Linear};
 };
 
 
@@ -77,27 +73,23 @@ struct BoxCollider2D {
 };
 
 struct TileMapLayer {
-private:
-    std::shared_ptr<TMXReader> map{nullptr};
-    int layerIndex{0};
+    struct TileChunk {
+        Rect bounds;
+        std::vector<InstanceData> instances;
+    };
 
-public:
-    TileMapLayer(std::shared_ptr<TMXReader> m = nullptr, int layer = 0)
-        : map(m), layerIndex(layer) {}
+    std::string map_path;
+    std::string atlas_path;
+    int layer_index = 0;
+    int tile_width = 0;
+    int tile_height = 0;
 
-    std::shared_ptr<TMXReader> getMap() const { return map; }
-    int getLayerIndex() const { return layerIndex; }
+    bool dirty = true;
+    std::vector<TileChunk> chunks;
 
-    void setMap(std::shared_ptr<TMXReader> m) { map = m; }
-    void setLayerIndex(int layer) {
-        if (map && layer >= 0 && layer < static_cast<int>(map->getMapData().layerData.size()))
-            layerIndex = layer;
-        else
-            layerIndex = 0;
-    }
+    TileMapLayer() = default;
 
-    bool isValid() const { return map != nullptr; }
+    bool is_valid() const { return !map_path.empty(); }
 };
-
 
 #endif //COMPONENTS_H
