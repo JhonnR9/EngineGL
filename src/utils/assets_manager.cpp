@@ -5,8 +5,8 @@
 #include "assets_manager.h"
 #include <filesystem>
 #include <fstream>
-#include <iostream>
 #include <ranges>
+#include <syncstream>
 
 AssetsManager::AssetsManager() = default;
 
@@ -34,7 +34,7 @@ void AssetsManager::load_file(const char* path) {
         return;
     }
 
-    std::cout << "File loaded successfully! Size: " << raw_bytes.size() << " bytes\n";
+    std::osyncstream(std::cout) << "File " << path<< " Loaded successfully! Size: "<< raw_bytes.size() << " bytes\n";
 
     {
         std::lock_guard<std::mutex> lock(mtx);

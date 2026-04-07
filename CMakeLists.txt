@@ -24,7 +24,7 @@ add_executable(EngineGL
         src/main/main.cpp
         src/main/app.cpp
         src/graphics/shader.cpp
-        src/graphics/texture_2d.cpp
+        src/resource_types/texture_2d.cpp
         src/graphics/sprite_batch.cpp
         src/scenes/scene.cpp
         src/scenes/my_scene.cpp

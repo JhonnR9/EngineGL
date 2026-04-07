@@ -3,7 +3,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include "main/app.h"
 #include "utils/vector2.h"
-#include "graphics/texture_2d.h"
+#include "../resource_types/texture_2d.h"
 #include <glm/glm.hpp>
 #include "font.h"
 #include "components/components.h"

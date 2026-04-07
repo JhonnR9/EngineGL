@@ -6,7 +6,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "texture_2d.h"
+#include "../resource_types/texture_2d.h"
 #include "glm/vec2.hpp"
 
 struct Character {

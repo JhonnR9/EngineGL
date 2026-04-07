@@ -7,7 +7,7 @@
 #include <filesystem>
 #include <SFML/System/Exception.hpp>
 #include "graphics/sprite_batch.h"
-#include "graphics/texture_2d.h"
+#include "../resource_types/texture_2d.h"
 #include "components/components.h"
 #include "utils/tmx_reader.h"
 
@@ -222,12 +222,12 @@ void RenderSystem::render_shapes() {
         auto z = registry.try_get<ZIndex>(entity);
         float z_index = z ? z->value : 0.0f;
 
-        Vector2 start = {
+        const Vector2 start = {
             line.start.x * transform.scale.x + transform.position.x,
             line.start.y * transform.scale.y + transform.position.y
         };
 
-        Vector2 end = {
+        const Vector2 end = {
             line.end.x * transform.scale.x + transform.position.x,
             line.end.y * transform.scale.y + transform.position.y
         };
@@ -243,7 +243,7 @@ void RenderSystem::render_shapes() {
 }
 
 void RenderSystem::render_tiles() {
-    auto view = registry.view<TileMapLayer, Transform>();
+    const auto view = registry.view<TileMapLayer, Transform>();
     Rect camera_rect = data.camera->get_view_rect();
 
     for (auto entity: view) {

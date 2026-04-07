@@ -14,8 +14,12 @@
 
 
 void MyScene::load_assets(AssetsManager *manager) {
-    std::string path = RESOURCE_PATH"/player.png";
-    manager->queue_file_load(path.c_str());
+    manager->queue_file_load(RESOURCE_PATH"/player.png");
+
+    // tilemap
+    manager->queue_file_load(RESOURCE_PATH"/Tilemap/map.tmx");
+    manager->queue_file_load(RESOURCE_PATH"/Tilemap/textures.tsx");
+    manager->queue_file_load(RESOURCE_PATH"/Tilemap/textures.png");
 }
 
 MyScene::MyScene(App &app, entt::registry &registry): Scene(app, registry), player_entity() {

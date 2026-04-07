@@ -8,7 +8,7 @@
 
 #include "scene.h"
 #include "graphics/sprite_batch.h"
-#include "graphics/texture_2d.h"
+#include "../resource_types/texture_2d.h"
 #include "entt/entt.hpp"
 #include "utils/assets_manager.h"
 

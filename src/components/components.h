@@ -18,8 +18,6 @@ struct SizeF {
     float height{0.0f};
 };
 
-
-
 struct ZIndex {
     float value = 0.0f;
 };
@@ -70,6 +68,12 @@ struct BoxCollider2D {
         : width(width), height(height), is_colliding(is_colliding),
           is_trigger(is_trigger), is_static(is_static), sync_size_with_sprite(sync_size_with_sprite) {
     }
+};
+
+struct TilemapLayerComponent {
+    std::string tmx_path;
+    int layer_index = 0;
+    std::string layer_name;
 };
 
 struct TileMapLayer {
