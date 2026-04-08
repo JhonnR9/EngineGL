@@ -184,16 +184,14 @@ void Renderer2D::begin() {
 
 
     glBindVertexArray(pipeline.vao);
-    pipeline.instances.clear();
-    pipeline.instances.reserve(pipeline.MAX_INSTANCES);
     pipeline.texture_slots.clear();
+    pipeline.instance_count = 0;
 }
 
 void Renderer2D::draw_texture(Texture2D *texture, Vector2 position, Vector2 scale,
                               float rotation, Vector2 origin, Color color, Rect sourceRect, bool flip_x, bool flip_y,
                               float z_index) {
-
-    if (pipeline.instances.size() >= pipeline.MAX_INSTANCES) {
+    if (pipeline.instance_count>= pipeline.MAX_INSTANCES) {
         flush();
     }
 
@@ -228,26 +226,27 @@ void Renderer2D::draw_texture(Texture2D *texture, Vector2 position, Vector2 scal
     instance.flip = (flip_x ? 1 : 0) | (flip_y ? 2 : 0);
     instance.z_index = z_index;
 
-    pipeline.instances.push_back(instance);
+    pipeline.instances[pipeline.instance_count++] = instance;
 }
+
 void Renderer2D::draw_instances(Texture2D *texture, const std::vector<InstanceData> &batch) {
     if (batch.empty()) return;
 
     size_t offset = 0;
     while (offset < batch.size()) {
-        if (pipeline.instances.size() >= pipeline.MAX_INSTANCES) {
+        if (pipeline.instance_count >= pipeline.MAX_INSTANCES) {
             flush();
         }
 
         float tex_index = get_texture_index(texture);
 
-        size_t space = pipeline.MAX_INSTANCES - pipeline.instances.size();
+        size_t space = pipeline.MAX_INSTANCES - pipeline.instance_count;
         size_t count = std::min(batch.size() - offset, space);
 
         for (size_t i = 0; i < count; ++i) {
             InstanceData inst = batch[offset + i];
             inst.tex_index = tex_index;
-            pipeline.instances.push_back(inst);
+            pipeline.instances[pipeline.instance_count++] = inst;
         }
         offset += count;
     }
@@ -259,7 +258,7 @@ void Renderer2D::draw_shape(Rect rect, Color color, Vector2 origin, float rotati
         return;
     }
 
-    if (pipeline.instances.size() >= pipeline.MAX_INSTANCES) {
+    if (pipeline.instance_count >= pipeline.MAX_INSTANCES) {
         flush();
     }
 
@@ -284,7 +283,7 @@ void Renderer2D::draw_shape(Rect rect, Color color, Vector2 origin, float rotati
     instance.shape_type = static_cast<int>(type);
     instance.z_index = z_index;
 
-    pipeline.instances.push_back(instance);
+    pipeline.instances[pipeline.instance_count++] = instance;
 }
 
 void Renderer2D::draw_rect(Rect rect, Color color, Vector2 origin, float rotation, float z_index) {
@@ -431,26 +430,41 @@ void Renderer2D::draw_text(Font &font, const std::string &text, Vector2 position
 
 void Renderer2D::flush() {
     end();
-    pipeline.instances.clear();
+    pipeline.instance_count = 0;
     pipeline.texture_slots.clear();
 }
 
 void Renderer2D::end() {
-    if (pipeline.instances.empty()) return;
+    if (pipeline.instance_count < 1) return;
 
-    std::ranges::sort(pipeline.instances,
-                      [](const InstanceData &a, const InstanceData &b) {
-                          if (a.z_index == b.z_index)
-                              return a.tex_index < b.tex_index;
-                          return a.z_index < b.z_index;
-                      });
+    std::ranges::sort(
+        pipeline.instances.begin(),
+        pipeline.instances.begin() + pipeline.instance_count,
+        [](const InstanceData &a, const InstanceData &b) {
+            if (a.z_index == b.z_index)
+                return a.tex_index < b.tex_index;
+            return a.z_index < b.z_index;
+        }
+    );
 
 
     pipeline.shader->use();
-
-
     glBindBuffer(GL_ARRAY_BUFFER, pipeline.instance_vbo);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, pipeline.instances.size() * sizeof(InstanceData), pipeline.instances.data());
+
+    glBufferData(
+        GL_ARRAY_BUFFER,
+        pipeline.MAX_INSTANCES * sizeof(InstanceData),
+        nullptr,
+        GL_DYNAMIC_DRAW
+    ); // orphan
+
+    glBufferSubData(
+        GL_ARRAY_BUFFER,
+        0,
+        pipeline.instance_count * sizeof(InstanceData),
+        pipeline.instances.data()
+    );
+
 
     for (int i = 0; i < pipeline.texture_slots.size(); i++) {
         glActiveTexture(GL_TEXTURE0 + i);
@@ -462,7 +476,7 @@ void Renderer2D::end() {
         6,
         GL_UNSIGNED_INT,
         nullptr,
-        pipeline.instances.size()
+        pipeline.instance_count
     );
 }
 

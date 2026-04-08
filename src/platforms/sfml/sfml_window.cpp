@@ -12,6 +12,7 @@ bool sfml_window::init(const char *title, int width, int height, bool fullscreen
     settings.majorVersion = 3;
     settings.minorVersion = 3;
     settings.attributeFlags = sf::ContextSettings::Core;
+    settings.sRgbCapable = false;
 
 
     if (fullscreen) {
@@ -33,7 +34,6 @@ void sfml_window::poll_events() {
     while (auto maybeEvent = window->pollEvent()) {
         const sf::Event &event = maybeEvent.value();
 
-        // Fechar Janela
         if (event.is<sf::Event::Closed>()) {
             if (eventCallback) eventCallback(ResizeEvent(0, 0));
             window->close();
@@ -45,10 +45,10 @@ void sfml_window::poll_events() {
                 eventCallback(ResizeEvent(resized->size.x, resized->size.y));
         }
 
-        // Teclado: Press
+
         if (const auto* keyPressed = event.getIf<sf::Event::KeyPressed>()) {
             if (eventCallback) {
-                // TRADUÇÃO AQUI:
+
                 int translatedKey = translate_sfml_key(keyPressed->code);
 
                 int mods = 0;
@@ -62,9 +62,6 @@ void sfml_window::poll_events() {
             }
         }
 
-        // Repita o mesmo para o KeyReleased...
-
-        // Teclado: Release
         if (const auto* keyReleased = event.getIf<sf::Event::KeyReleased>()) {
             if (eventCallback) {
                 int translatedKey = translate_sfml_key(keyReleased->code);
@@ -78,13 +75,11 @@ void sfml_window::poll_events() {
             }
         }
 
-        // Mouse: Movimento
         if (const auto* mouseMove = event.getIf<sf::Event::MouseMoved>()) {
             if (eventCallback)
                 eventCallback(MouseMoveEvent(mouseMove->position.x, mouseMove->position.y));
         }
 
-        // Mouse: Botão Pressionado
         if (const auto* mousePressed = event.getIf<sf::Event::MouseButtonPressed>()) {
             MouseButton btn = MouseButton::Left;
             if (mousePressed->button == sf::Mouse::Button::Right) btn = MouseButton::Right;
@@ -96,7 +91,6 @@ void sfml_window::poll_events() {
                                                mousePressed->position.y));
         }
 
-        // Mouse: Botão Solto
         if (const auto* mouseReleased = event.getIf<sf::Event::MouseButtonReleased>()) {
             MouseButton btn = MouseButton::Left;
             if (mouseReleased->button == sf::Mouse::Button::Right) btn = MouseButton::Right;
@@ -130,7 +124,6 @@ int sfml_window::translate_sfml_key(sf::Keyboard::Key key) {
         return '0' + (static_cast<int>(key) - static_cast<int>(Key::Num0));
     }
 
-    // Teclas Especiais
     switch (key) {
         case Key::Up:     return 38; // Key::UP
         case Key::Down:   return 40; // Key::DOWN

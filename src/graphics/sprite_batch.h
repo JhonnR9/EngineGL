@@ -3,6 +3,7 @@
 
 #include <glad.h>
 
+#include <array>
 #include <vector>
 #include <memory>
 #include <string>
@@ -21,8 +22,9 @@ class Renderer2D {
         GLuint ebo{0};
         GLuint instance_vbo{0};
         std::unique_ptr<Shader> shader{nullptr};
-        unsigned int MAX_INSTANCES{4096*2};
-        std::vector<InstanceData> instances;
+         int MAX_INSTANCES = 4096 * 2;
+        std::array<InstanceData, 4096*2> instances;
+        unsigned int instance_count{0};
         static constexpr int MAX_TEXTURE_SLOTS = 16;
         std::vector<Texture2D *> texture_slots;
         OrthographicCamera *camera{nullptr};

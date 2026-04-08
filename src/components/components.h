@@ -18,6 +18,15 @@ struct SizeF {
     float height{0.0f};
 };
 
+struct File {
+    std::string path;
+    enum class FileStatus {
+        Pending,
+        Loaded,
+        Invalid
+    } status = FileStatus::Pending;
+};
+
 struct ZIndex {
     float value = 0.0f;
 };
@@ -71,7 +80,7 @@ struct BoxCollider2D {
 };
 
 struct TilemapLayerComponent {
-    std::string tmx_path;
+    File tmx;
     int layer_index = 0;
     std::string layer_name;
 };
